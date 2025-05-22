@@ -1,6 +1,6 @@
-<div class="relative h-full">
+<div class="relative h-full max-w-3xl mx-auto">
     <div
-        class="flex h-[calc(100vh-8rem)] max-h-screen max-w-3xl mx-auto flex-1 flex-col-reverse overflow-y-scroll gap-4 py-1">
+        class="flex h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)] max-h-screen max-w-3xl mx-auto flex-1 flex-col-reverse overflow-y-scroll gap-4 py-1">
 
         @include('livewire.loading-indicator')
 
