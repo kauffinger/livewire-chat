@@ -1,11 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "kauffinger/livewire-chat-kit",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "A clean streamed chat kit for Laravel Livewire. Built with FluxUI & Prism.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "llms",
+        "prism",
+        "fluxui",
+        "chat"
     ],
     "license": "MIT",
     "require": {
