@@ -71,7 +71,24 @@
     /* Firefox scrollbar styling */
     * {
         scrollbar-width: thin;
-        scrollbar-color: var(--color-zinc-300) white;
+        scrollbar-color: var(--color-zinc-300) white; /* thumb track */
+    }
+
+    /* Dark mode scrollbar overrides */
+    .dark ::-webkit-scrollbar-track {
+        background: var(--color-zinc-700);
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: var(--color-zinc-500);
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-zinc-400);
+    }
+
+    .dark * {
+        scrollbar-color: var(--color-zinc-500) var(--color-zinc-800); /* thumb track */
     }
 }
 
