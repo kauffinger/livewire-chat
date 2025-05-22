@@ -5,7 +5,7 @@
         <flux:heading>
             AI
         </flux:heading>
-        <flux:text class="prose-zinc prose-sm">
+        <flux:text class="prose-zinc dark:prose-invert prose-sm">
             {!! Str::markdown($message->content) !!}
         </flux:text>
     </div>

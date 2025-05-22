@@ -5,7 +5,7 @@
                 AI
             </flux:heading>
             <flux:text>
-                <span class="p-0 m-0 prose-zinc prose-sm" wire:stream="streamed-message" wire:replace>
+                <span class="p-0 m-0 prose-zinc dark:prose-invert prose-sm" wire:stream="streamed-message" wire:replace>
                     <span class="animate-pulse">...</span>
                 </span>
             </flux:text>
