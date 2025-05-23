@@ -2,7 +2,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kauffinger/livewire-chat-kit.svg?style=flat-square)](https://packagist.org/packages/kauffinger/livewire-chat-kit)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Atests+branch%3Amain)
-[![Linter Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/linter.yml?branch=main&label=tests&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Alinter+branch%3Amain)
+[![Linter Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/lint.yml?branch=main&label=linter&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Alint+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/kauffinger/livewire-chat-kit.svg?style=flat-square)](https://packagist.org/packages/kauffinger/livewire-chat-kit)
 
 A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and [Prism](https://github.com/prismphp/prism). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
