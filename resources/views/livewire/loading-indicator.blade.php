@@ -6,7 +6,7 @@
             </flux:heading>
             <flux:text x-data="streamedMarkdown()" >
                 <span x-ref="raw" class="hidden" wire:stream="streamed-message" wire:replace></span>
-                <article wire:ignore class="prose prose-zinc prose-sm dark:prose-invert max-w-none min-w-0 overflow-hidden break-words prose-p:m-0 prose-code:font-mono prose-pre:border prose-pre:border-zinc-200 prose-pre:dark:border-zinc-600 prose-pre:rounded-md prose-pre:p-4 prose-pre:mb-1 prose-pre:bg-zinc-100 prose-pre:dark:bg-zinc-800" x-html="html"></article>
+                <article wire:ignore class="prose prose-zinc prose-sm dark:prose-invert max-w-none min-w-0 overflow-hidden break-words prose-p:m-0 prose-code:font-mono prose-pre:border prose-pre:border-zinc-200 prose-pre:dark:border-zinc-600 prose-pre:rounded-md prose-pre:p-4 prose-pre:mb-1 prose-pre:bg-zinc-100 prose-pre:dark:bg-zinc-800 prose-pre:text-zinc-900 prose-pre:dark:text-zinc-100" x-html="html"></article>
             </flux:text>
         </div>
     </div>
