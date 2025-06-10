@@ -1,4 +1,4 @@
-<div class="mt-4 flex flex-col gap-6">
+<div class="flex flex-col gap-6 mt-4">
     <flux:text class="text-center">
         {{ __('Please verify your email address by clicking on the link we just emailed to you.') }}
     </flux:text>
@@ -9,7 +9,7 @@
         </flux:text>
     @endif
 
-    <div class="flex flex-col items-center justify-between space-y-3">
+    <div class="flex flex-col justify-between items-center space-y-3">
         <flux:button wire:click="sendVerification" variant="primary" class="w-full">
             {{ __('Resend verification email') }}
         </flux:button>

@@ -23,7 +23,7 @@ export default function streamedMarkdown () {
                 linkify: true,
                 typographer: true,
                 highlight: (str, lang) => {
-                    
+
                     if (lang && hljs.getLanguage(lang)) {
                         try {
                             return hljs.highlight(str, { language: lang }).value
@@ -67,26 +67,24 @@ export default function streamedMarkdown () {
 
             // Determine which theme to use based on dark mode
             const isDark = this.$flux?.dark || false
-            
+
             // Use local CSS files from public directory
-            const themeUrl = isDark 
+            const themeUrl = isDark
                 ? '/css/highlight/github-dark.css'
                 : '/css/highlight/github-light.css'
-
-            console.log('Loading highlight theme:', { isDark, themeUrl })
 
             // Create and append new theme link
             this.currentThemeLink = document.createElement('link')
             this.currentThemeLink.rel = 'stylesheet'
             this.currentThemeLink.href = themeUrl
             this.currentThemeLink.setAttribute('data-highlight-theme', 'dynamic')
-            
+
             document.head.appendChild(this.currentThemeLink)
         },
 
         render () {
             let content = this.$refs.raw.innerText
-            
+
             this.html = this.md.render(content)
         },
 
