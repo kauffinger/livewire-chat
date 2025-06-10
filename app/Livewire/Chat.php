@@ -21,9 +21,13 @@ class Chat extends Component
 
     public string $newMessage = '';
 
+    public string $model = 'gpt-4o-mini';
+
     public function mount(ChatModel $chat): void
     {
         $this->chat = $chat;
+
+        $this->model = $this->chat->model ?? 'gpt-4o-mini';
 
         $this->messages = $this->chat->messages()
             ->orderBy('created_at')
@@ -71,7 +75,7 @@ class Chat extends Component
         abort_unless(Auth::user()->can('update', $this->chat), 403);
 
         $generator = Prism::text()
-            ->using(Provider::OpenAI, 'gpt-4o-mini')
+            ->using(Provider::OpenAI, $this->model)
             ->withSystemPrompt('You are a helpful assistant.')
             ->withMessages(collect($this->messages)->map->toPrism()->all())
             ->asStream();
@@ -137,6 +141,17 @@ class Chat extends Component
         ]);
 
         Flux::modal('confirm-unshare')->close();
+    }
+
+    public function setModel(string $value): void
+    {
+        abort_unless(Auth::user()->can('update', $this->chat), 403);
+
+        $this->model = $value;
+
+        $this->chat->update([
+            'model' => $value,
+        ]);
     }
 
     public function render(): View

@@ -42,6 +42,7 @@ class Sidebar extends Component
     {
         $chat = Auth::user()->chats()->create([
             'title' => __('New chat'),
+            'model' => 'gpt-4o-mini',
         ]);
 
         $this->refreshChats();

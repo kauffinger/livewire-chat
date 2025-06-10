@@ -37,6 +37,7 @@ class Dashboard extends Component
 
         $chat = $user->chats()->create([
             'title' => __('New chat'),
+            'model' => 'gpt-4o-mini',
         ]);
 
         $this->redirectRoute('chat.show', ['chat' => $chat->id], navigate: true);

@@ -24,6 +24,7 @@ final class ChatFactory extends Factory
             'user_id' => User::factory(),
             'title' => $this->faker->sentence(3),
             'visibility' => $this->faker->randomElement(['public', 'private']),
+            'model' => 'gpt-4o-mini',
         ];
     }
 }

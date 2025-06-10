@@ -59,6 +59,26 @@
         </flux:modal>
     @endcan
 
+    @can('update', $chat)
+        <!-- Model Selector (top-left) -->
+        <div class="fixed top-4 right-24 z-50">
+            <flux:dropdown position="bottom" align="end">
+                <flux:button size="sm" variant="subtle" icon="cpu-chip">
+                    {{ strtoupper($model) }}
+                </flux:button>
+
+                <flux:menu class="min-w-40">
+                    <flux:menu.radio.group>
+                        @foreach (\App\Enums\OpenAiModel::toArray() as $modelName => $modelValue)
+                            <flux:menu.item type="button" wire:click="setModel('{{ $modelValue }}')"
+                                :active="$model === $modelValue">{{ $modelValue }}</flux:menu.item>
+                        @endforeach
+                    </flux:menu.radio.group>
+                </flux:menu>
+            </flux:dropdown>
+        </div>
+    @endcan
+
     <div
         class="flex overflow-y-scroll flex-col-reverse flex-1 gap-4 py-1 mx-auto max-w-3xl max-h-screen h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)]">
 
