@@ -19,8 +19,8 @@ class Profile extends Component
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $this->name = Auth::user()->name ?? 'Guest';
+        $this->email = Auth::user()->email ?? '';
     }
 
     /**
