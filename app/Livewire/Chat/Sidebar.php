@@ -30,6 +30,7 @@ class Sidebar extends Component
         $this->chats = Auth::user()
             ?->chats()
             ->latest()
+            ->limit(10)
             ->get()
             ->map(fn (ChatModel $chat) => [
                 'id' => $chat->id,
