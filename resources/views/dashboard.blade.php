@@ -1,6 +1,6 @@
 <x-layouts.app :title="__('Dashboard')">
     @if (($showCreateButton ?? false) === true)
-        <div class="flex justify-center items-center min-h-screen">
+        <div class="flex min-h-screen items-center justify-center">
             <form method="POST" action="{{ route('chat.store') }}" class="space-y-4 text-center">
                 @csrf
                 <flux:heading size="xl" level="1" class="mb-6">

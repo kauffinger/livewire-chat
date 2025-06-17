@@ -11,12 +11,12 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 
 ## Features
 
-*   **Livewire-Powered:** Build dynamic interfaces with PHP.
-*   **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
-*   **FluxUI Components:** Beautiful, pre-built UI components for a polished look and feel.
-*   **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
-*   **Minimal JavaScript:** Focus on your PHP backend.
-*   **TailwindCSS Styled:** Includes a TailwindCSS setup with a typography plugin for rendering markdown.
+- **Livewire-Powered:** Build dynamic interfaces with PHP.
+- **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
+- **FluxUI Components:** Beautiful, pre-built UI components for a polished look and feel.
+- **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
+- **Minimal JavaScript:** Focus on your PHP backend.
+- **TailwindCSS Styled:** Includes a TailwindCSS setup with a typography plugin for rendering markdown.
 
 ## Installation
 
@@ -84,29 +84,32 @@ This Blade view renders the chat interface.
 
 1.  User types a message in `x-chat.message-input` and hits send.
 2.  `sendMessage()` in `Chat.php` is triggered.
-    *   The user's message is added to the `$messages` array.
-    *   The input field is cleared.
-    *   `$this->js('$wire.runChatToolLoop()')` is called, which immediately invokes the `runChatToolLoop()` method. This allows the UI to update with the user's message before the LLM call.
+    - The user's message is added to the `$messages` array.
+    - The input field is cleared.
+    - `$this->js('$wire.runChatToolLoop()')` is called, which immediately invokes the `runChatToolLoop()` method. This allows the UI to update with the user's message before the LLM call.
 3.  `runChatToolLoop()`:
-    *   Constructs a request to the LLM using Prism, including the system prompt and the current chat history.
-    *   The request is sent as a stream.
-    *   As tokens arrive from the LLM:
-        *   They are appended to a local `$message` variable.
-        *   The `stream()` method sends the accumulated `$message` (converted to markdown) to the frontend, updating the part of the view listening to `streamed-message`. This is typically handled by the `x-chat.assistant-message` component.
+    - Constructs a request to the LLM using Prism, including the system prompt and the current chat history.
+    - The request is sent as a stream.
+    - As tokens arrive from the LLM:
+      - They are appended to a local `$message` variable.
+      - The `stream()` method sends the accumulated `$message` (converted to markdown) to the frontend, updating the part of the view listening to `streamed-message`. This is typically handled by the `x-chat.assistant-message` component.
 4.  Once the LLM finishes generating its response:
-    *   The complete assistant message is added to the `$messages` array. The temporary streamed display is effectively replaced by the final message in the loop.
+    - The complete assistant message is added to the `$messages` array. The temporary streamed display is effectively replaced by the final message in the loop.
 
 ## Contributing
 
 Contributions are welcome! If you'd like to improve the Livewire Chat Kit, please feel free to:
 
-*   Report a bug.
-*   Suggest a new feature.
-*   Submit a pull request.
+- Report a bug.
+- Suggest a new feature.
+- Submit a pull request.
 
 Please visit the [GitHub repository](https://github.com/kauffinger/livewire-chat-kit) to contribute.
 
 ## License
 
 This project is open-sourced software licensed under the [MIT license](LICENSE.md).
+
+```
+
 ```

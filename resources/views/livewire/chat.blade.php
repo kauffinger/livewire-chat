@@ -1,4 +1,4 @@
-<div class="relative mx-auto max-w-3xl h-full">
+<div class="relative mx-auto h-full max-w-3xl">
     <!-- Share Button Trigger (fixed at top-right of viewport) -->
     @can('update', $chat)
         @if ($chat->visibility === \App\Enums\Visibility::Private->value)
@@ -70,8 +70,13 @@
                 <flux:menu class="min-w-40">
                     <flux:menu.radio.group>
                         @foreach (\App\Enums\OpenAiModel::toArray() as $modelName => $modelValue)
-                            <flux:menu.item type="button" wire:click="setModel('{{ $modelValue }}')"
-                                :active="$model === $modelValue">{{ $modelValue }}</flux:menu.item>
+                            <flux:menu.item
+                                type="button"
+                                wire:click="setModel('{{ $modelValue }}')"
+                                :active="$model === $modelValue"
+                            >
+                                {{ $modelValue }}
+                            </flux:menu.item>
                         @endforeach
                     </flux:menu.radio.group>
                 </flux:menu>
@@ -80,14 +85,14 @@
     @endcan
 
     <div
-        class="flex overflow-y-scroll flex-col-reverse flex-1 gap-4 py-1 mx-auto max-w-3xl max-h-screen h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)]">
-
+        class="mx-auto flex h-[calc(100vh-10rem)] max-h-screen max-w-3xl flex-1 flex-col-reverse gap-4 overflow-y-scroll py-1 lg:h-[calc(100vh-8rem)]"
+    >
         @include('livewire.loading-indicator')
 
         @foreach (array_reverse($messages) as $message)
             @if ($message instanceof \App\Dtos\UserMessage)
                 <x-chat.user-message :message="$message" :index="$loop->index" />
-            @elseif($message instanceof \App\Dtos\AssistantMessage)
+            @elseif ($message instanceof \App\Dtos\AssistantMessage)
                 <x-chat.assistant-message :message="$message" :is-first="$loop->first" />
             @endif
         @endforeach
@@ -95,6 +100,5 @@
         @can('update', $chat)
             @include('livewire.message-input')
         @endcan
-
     </div>
 </div>
