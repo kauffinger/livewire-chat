@@ -4,8 +4,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "format": "blade-formatter \"./resources/**/*.blade.php\" -w && rustywind --write .",
-        "format:check": "blade-formatter \"./resources/**/*.blade.php\" --check-formatted --diff && rustywind --check-formatted ."
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.0.7",
@@ -16,7 +16,9 @@
         "highlight.js": "^11.11.1",
         "laravel-vite-plugin": "^1.0",
         "markdown-it": "^14.1.0",
-        "rustywind": "^0.24.0",
+        "prettier": "^3.5.3",
+        "prettier-plugin-tailwindcss": "^0.6.12",
+        "prettier-plugin-blade": "^2.1.21",
         "tailwindcss": "^4.0.7",
         "vite": "^6.0"
     },

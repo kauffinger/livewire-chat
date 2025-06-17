@@ -1,0 +1,4 @@
+composer.lock
+tests/**/*.html
+storage/framework/**/*.blade.php
+resources/views/emails/**/*.blade.php
