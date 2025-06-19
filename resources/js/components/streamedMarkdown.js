@@ -14,6 +14,17 @@ export default function streamedMarkdown() {
         md: null,
         html: '', // rendered output for <article x-html="html">
         currentThemeLink: null, // track the current theme link element
+        // Chunk type data
+        streamData: {
+            text: '',
+            thinking: '',
+            meta: '',
+            toolCalls: [],
+            toolResults: [],
+            currentChunkType: 'text',
+        },
+        thinkingHtml: '',
+        showThinking: false,
 
         init() {
             // Configure markdown-it to match Vue component options
@@ -79,9 +90,69 @@ export default function streamedMarkdown() {
         },
 
         render() {
-            let content = this.$refs.raw.innerText;
+            let content = this.$refs.raw.innerText.trim();
 
-            this.html = this.md.render(content);
+            // Skip empty content
+            if (!content) {
+                return;
+            }
+
+            // Try to parse as JSON first (new format)
+            try {
+                const jsonData = JSON.parse(content);
+                if (jsonData && typeof jsonData === 'object') {
+                    this.streamData = { ...this.streamData, ...jsonData };
+
+                    // Render main text content
+                    this.html = this.md.render(this.streamData.text || '');
+
+                    // Render thinking content if available
+                    if (this.streamData.thinking) {
+                        this.thinkingHtml = this.md.render(this.streamData.thinking);
+                    }
+
+                    return;
+                }
+            } catch (e) {
+                // Fall back to plain text parsing (backward compatibility)
+                // But preserve accumulated tool data to prevent indicators from disappearing
+                this.html = this.md.render(content);
+
+                // Only reset text-related fields, preserve tool data
+                this.streamData = {
+                    ...this.streamData, // Preserve existing tool calls/results
+                    text: content,
+                    thinking: '',
+                    meta: '',
+                    currentChunkType: 'text',
+                };
+            }
+        },
+
+        toggleThinking() {
+            this.showThinking = !this.showThinking;
+        },
+
+        hasThinking() {
+            return this.streamData.thinking && this.streamData.thinking.trim().length > 0;
+        },
+
+        hasToolCalls() {
+            return this.streamData.toolCalls && this.streamData.toolCalls.length > 0;
+        },
+
+        hasToolResults() {
+            return this.streamData.toolResults && this.streamData.toolResults.length > 0;
+        },
+
+        isCurrentlyThinking() {
+            return this.streamData.currentChunkType === 'thinking';
+        },
+
+        isCurrentlyUsingTools() {
+            return (
+                this.streamData.currentChunkType === 'tool_call' || this.streamData.currentChunkType === 'tool_result'
+            );
         },
     };
 }

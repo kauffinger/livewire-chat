@@ -41,6 +41,8 @@
 
     <div
         class="mx-auto flex h-[calc(100vh-10rem)] max-h-screen max-w-3xl flex-1 flex-col-reverse gap-4 overflow-y-scroll py-1 lg:h-[calc(100vh-8rem)]"
+        x-data
+        x-init="$el.scrollTop = $el.scrollHeight"
     >
         @include('livewire.loading-indicator')
 
@@ -49,6 +51,8 @@
                 <x-chat.user-message :message="$message" :index="$loop->index" />
             @elseif ($message instanceof \App\Dtos\AssistantMessage)
                 <x-chat.assistant-message :message="$message" :is-first="$loop->first" />
+            @elseif ($message instanceof \App\Dtos\ToolResultMessage)
+                <x-chat.tool-result-message :message="$message" />
             @endif
         @endforeach
 

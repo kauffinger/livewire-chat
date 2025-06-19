@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Livewire\Component;
 use Prism\Prism\Enums\ChunkType;
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
 
 class Chat extends Component
@@ -35,7 +36,12 @@ class Chat extends Component
             ->map(function (Message $message) {
                 return match ($message->role) {
                     'user' => new \App\Dtos\UserMessage($message->parts['text'] ?? ''),
-                    'assistant' => new \App\Dtos\AssistantMessage($message->parts['text'] ?? '', [], []),
+                    'assistant' => new \App\Dtos\AssistantMessage(
+                        $message->parts['text'] ?? '',
+                        $message->parts['toolCalls'] ?? [],
+                        []
+                    ),
+                    'tool_result' => new \App\Dtos\ToolResultMessage($message->parts['toolResults'] ?? []),
                 };
             })
             ->all();
@@ -78,10 +84,28 @@ class Chat extends Component
             ->using(Provider::OpenAI, $this->model)
             ->withSystemPrompt('You are a helpful assistant.')
             ->withMessages(collect($this->messages)->map->toPrism()->all())
+            ->withMaxSteps(5)
+            ->withTools([
+                Tool::as('sum')->withNumberParameter('a', 'The first number to sum', required: true)
+                    ->withNumberParameter('b', 'The second number to sum', required: true)
+                    ->for('Sums two numbers together')
+                    ->using(function ($a, $b) {
+                        return (string) ($a + $b);
+                    }),
+            ])
             ->asStream();
 
         $parts = [];
+        $streamData = [
+            'text' => '',
+            'thinking' => '',
+            'meta' => '',
+            'toolCalls' => [],
+            'toolResults' => [],
+            'currentChunkType' => 'text',
+        ];
         $fullText = '';
+        $toolResults = [];
 
         foreach ($generator as $chunk) {
             $chunkTypeString = $this->mapChunkTypeToString($chunk->chunkType);
@@ -92,11 +116,68 @@ class Chat extends Component
 
             $parts[$chunkTypeString] .= $chunk->text;
 
-            $fullText .= $chunk->text;
+            // Update current chunk type but preserve accumulated data
+            $streamData['currentChunkType'] = $chunkTypeString;
 
-            $this->stream('streamed-message', htmlentities($fullText), true);
+            switch ($chunk->chunkType) {
+                case ChunkType::Text:
+                    $streamData['text'] .= $chunk->text;
+                    $fullText .= $chunk->text;
+                    break;
+                case ChunkType::Thinking:
+                    $streamData['thinking'] .= $chunk->text;
+                    break;
+                case ChunkType::Meta:
+                    $streamData['meta'] .= $chunk->text;
+                    break;
+                case ChunkType::ToolCall:
+                    // Extract tool calls from the chunk's toolCalls array and add to accumulated data
+                    foreach ($chunk->toolCalls as $toolCall) {
+                        $streamData['toolCalls'][] = [
+                            'name' => $toolCall->name ?? 'unknown',
+                            'id' => $toolCall->id ?? null,
+                            'arguments' => $toolCall->arguments() ?? [],
+                            'reasoningId' => $toolCall->reasoningId ?? null,
+                            'resultId' => $toolCall->resultId ?? null,
+                            'reasoningSummary' => $toolCall->reasoningSummary ?? null,
+                        ];
+                    }
+                    break;
+                case ChunkType::ToolResult:
+                    // Extract tool results from the chunk's toolResults array and add to accumulated data
+                    foreach ($chunk->toolResults as $toolResult) {
+                        $toolResultData = [
+                            'result' => $toolResult->result ?? '',
+                            'toolName' => $toolResult->toolName ?? 'unknown',
+                            'toolCallId' => $toolResult->toolCallId ?? null,
+                            'args' => $toolResult->args ?? [],
+                            'toolCallResultId' => $toolResult->toolCallResultId ?? null,
+                        ];
+                        $streamData['toolResults'][] = $toolResultData;
+                        $toolResults[] = $toolResultData;
+                    }
+                    break;
+            }
+
+            $this->stream('streamed-message', json_encode($streamData), true);
         }
 
+        // Store tool calls in assistant message parts for persistence
+        if (! empty($streamData['toolCalls'])) {
+            $parts['toolCalls'] = $streamData['toolCalls'];
+        }
+
+        // Create separate ToolResultMessage if we have tool results
+        if (! empty($toolResults)) {
+            $this->chat->messages()->create([
+                'role' => 'tool_result',
+                'parts' => ['toolResults' => $toolResults],
+                'attachments' => '[]',
+            ]);
+            $this->messages[] = new \App\Dtos\ToolResultMessage($toolResults);
+        }
+
+        // Create AssistantMessage without tool results in additionalContent
         if ($parts !== []) {
             $this->chat->messages()->create([
                 'role' => 'assistant',
@@ -106,7 +187,11 @@ class Chat extends Component
             $this->chat->touch();
         }
 
-        $this->messages[] = new \App\Dtos\AssistantMessage($fullText);
+        $this->messages[] = new \App\Dtos\AssistantMessage($fullText, $streamData['toolCalls'], []);
+
+        if ($this->chat->messages()->count() === 2) {
+            $this->dispatch('chat-started');
+        }
     }
 
     /**
@@ -118,6 +203,8 @@ class Chat extends Component
             ChunkType::Text => 'text',
             ChunkType::Thinking => 'thinking',
             ChunkType::Meta => 'meta',
+            ChunkType::ToolCall => 'tool_call',
+            ChunkType::ToolResult => 'tool_result',
         };
     }
 

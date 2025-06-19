@@ -6,30 +6,24 @@ use App\Models\Chat as ChatModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class Sidebar extends Component
 {
-    /**
-     * The list of chats for the current user.
-     *
-     * @var array<int, array{ id: string, title: string }>
-     */
-    public array $chats = [];
-
     public ?string $activeChatId = null;
 
     public function mount(): void
     {
         $this->activeChatId = request()->route('chat')?->id;
-        $this->refreshChats();
     }
 
-    public function refreshChats(): void
+    #[Computed]
+    public function chats(): array
     {
-        $this->chats = Auth::user()
+        return Auth::user()
             ?->chats()
-            ->latest()
+            ->latest('updated_at')
             ->limit(10)
             ->get()
             ->map(fn (ChatModel $chat) => [
@@ -45,8 +39,6 @@ class Sidebar extends Component
             'title' => __('New chat'),
             'model' => 'gpt-4o-mini',
         ]);
-
-        $this->refreshChats();
 
         $this->redirect(route('chat.show', $chat), navigate: true);
     }
