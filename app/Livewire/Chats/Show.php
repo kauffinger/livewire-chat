@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Chats;
 
 use App\Enums\Visibility;
 use App\Models\Chat as ChatModel;
@@ -14,7 +14,7 @@ use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
 
-class Chat extends Component
+class Show extends Component
 {
     public array $messages = [];
 
@@ -243,6 +243,6 @@ class Chat extends Component
 
     public function render(): View
     {
-        return view('livewire.chat');
+        return view('livewire.chats.show');
     }
 }

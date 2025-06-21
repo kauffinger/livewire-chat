@@ -29,5 +29,21 @@
                 </flux:navlist.item>
             @endforeach
         </div>
+
+        <!-- Show All button -->
+        @auth
+            <div class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
+                <flux:button
+                    :href="route('chats.index')"
+                    wire:navigate
+                    icon="list-bullet"
+                    size="sm"
+                    variant="ghost"
+                    class="w-full justify-start"
+                >
+                    {{ __('Show All Chats') }}
+                </flux:button>
+            </div>
+        @endauth
     </flux:navlist.group>
 </div>

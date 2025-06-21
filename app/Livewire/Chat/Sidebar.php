@@ -24,7 +24,7 @@ class Sidebar extends Component
         return Auth::user()
             ?->chats()
             ->latest('updated_at')
-            ->limit(10)
+            ->limit(5)
             ->get()
             ->map(fn (ChatModel $chat) => [
                 'id' => $chat->id,
