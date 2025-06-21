@@ -1,5 +1,5 @@
-<div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
+<div class="mx-auto max-w-7xl pb-6 xl:px-24">
+    <div>
         <div class="mb-6 flex items-center justify-between">
             <flux:heading size="xl" level="1">
                 {{ __('All Chats') }}
