@@ -113,4 +113,8 @@ $generator = Prism::text()
 
 ## Development Workflow Notes
 
-- You don't need to run npm run build, i have npm run dev running
+- You don't need to run npm run build, I have npm run dev running
+- Use `php artisan` to do laravel related things like creating Models/Components etc.
+- Stay CRUDDY
+- Available UI components are under vendor/livewire/flux/stubs/resources/views/flux
+- Find available component docs by googling "site:fluxui.dev <component name>"
