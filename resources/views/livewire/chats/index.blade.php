@@ -14,14 +14,14 @@
             <div class="space-y-4">
                 @foreach ($chats as $chat)
                     <div
-                        class="rounded-lg border border-zinc-200 bg-white p-6 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                        class="rounded-lg border border-zinc-200 bg-white p-6 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                     >
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <flux:heading size="lg" level="3" class="mb-2">
                                     <flux:link
                                         :href="route('chat.show', $chat->id)"
-                                        wire:navigate
+                                        wire:navigate.hover
                                         class="hover:underline"
                                     >
                                         {{ $chat->title }}
@@ -31,22 +31,22 @@
                                 <div class="flex flex-wrap gap-4 text-sm text-zinc-500 dark:text-zinc-400">
                                     <span class="flex items-center">
                                         <flux:icon name="clock" class="mr-1 h-4 w-4" />
-                                        {{ __('Created') }}: {{ $chat->created_at->diffForHumans() }}
+                                        {{ $chat->created_at->diffForHumans() }}
                                     </span>
                                     <span class="flex items-center">
                                         <flux:icon name="arrow-path" class="mr-1 h-4 w-4" />
-                                        {{ __('Updated') }}: {{ $chat->updated_at->diffForHumans() }}
+                                        {{ $chat->updated_at->diffForHumans() }}
                                     </span>
                                     <span class="flex items-center">
                                         <flux:icon name="chat-bubble-left" class="mr-1 h-4 w-4" />
-                                        {{ $chat->messages_count }} {{ __('messages') }}
+                                        {{ $chat->messages_count }}
                                     </span>
                                 </div>
                             </div>
 
                             <flux:button
                                 :href="route('chat.show', $chat->id)"
-                                wire:navigate
+                                wire:navigate.hover
                                 size="sm"
                                 variant="ghost"
                                 icon="arrow-right"

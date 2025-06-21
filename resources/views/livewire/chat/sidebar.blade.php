@@ -35,7 +35,7 @@
             <div class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
                 <flux:button
                     :href="route('chats.index')"
-                    wire:navigate
+                    wire:navigate.hover
                     icon="list-bullet"
                     size="sm"
                     variant="ghost"
