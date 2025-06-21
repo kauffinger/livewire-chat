@@ -13,9 +13,7 @@
         @if ($chats->count() > 0)
             <div class="space-y-4">
                 @foreach ($chats as $chat)
-                    <div
-                        class="rounded-lg border border-zinc-200 bg-white p-6 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                    >
+                    <x-card>
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <flux:heading size="lg" level="3" class="mb-2">
@@ -54,7 +52,7 @@
                                 {{ __('Open') }}
                             </flux:button>
                         </div>
-                    </div>
+                    </x-card>
                 @endforeach
             </div>
 
