@@ -51,8 +51,6 @@
                 <x-chat.user-message :message="$message" :index="$loop->index" />
             @elseif ($message instanceof \App\Dtos\AssistantMessage)
                 <x-chat.assistant-message :message="$message" :is-first="$loop->first" />
-            @elseif ($message instanceof \App\Dtos\ToolResultMessage)
-                <x-chat.tool-result-message :message="$message" />
             @endif
         @endforeach
 

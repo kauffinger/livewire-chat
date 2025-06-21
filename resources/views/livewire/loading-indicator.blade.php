@@ -1,4 +1,9 @@
-<div wire:loading.flex wire:target="runChatToolLoop" class="relative mx-auto hidden w-full max-w-4xl flex-1">
+<div
+    wire:loading.flex
+    wire:target="runChatToolLoop"
+    wire:key="loading-{{ count($messages) }}"
+    class="relative mx-auto hidden w-full max-w-4xl flex-1"
+>
     <div class="flex w-full flex-row justify-start">
         <div
             class="prose prose-sm max-h-fit max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
@@ -45,25 +50,10 @@
 
             <!-- Tool calls display -->
             <div x-show="hasToolCalls()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-                <div class="text-sm text-zinc-600 dark:text-zinc-400">Tools used:</div>
                 <template x-for="toolCall in streamData.toolCalls" :key="toolCall.name + Date.now()">
                     <div class="mt-1 flex items-center gap-2 text-xs">
                         <flux:icon.wrench-screwdriver class="h-3 w-3 text-blue-500" />
                         <span x-text="toolCall.name" class="font-mono text-blue-600 dark:text-blue-400"></span>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Tool results display -->
-            <div x-show="hasToolResults()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-                <div class="text-sm text-zinc-600 dark:text-zinc-400">Tool results:</div>
-                <template x-for="result in streamData.toolResults" :key="result.toolName + Date.now()">
-                    <div class="mt-1 text-xs">
-                        <div class="font-mono text-green-600 dark:text-green-400" x-text="result.toolName"></div>
-                        <div
-                            class="truncate text-zinc-500 dark:text-zinc-400"
-                            x-text="result.result.substring(0, 100) + (result.result.length > 100 ? '...' : '')"
-                        ></div>
                     </div>
                 </template>
             </div>
