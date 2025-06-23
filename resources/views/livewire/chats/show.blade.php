@@ -46,10 +46,10 @@
     >
         @include('livewire.loading-indicator')
 
-        @foreach (array_reverse($messages) as $message)
-            @if ($message instanceof \App\Dtos\UserMessage)
+        @foreach (array_reverse($this->messages) as $message)
+            @if ($message->role === 'user')
                 <x-chat.user-message :message="$message" :index="$loop->index" />
-            @elseif ($message instanceof \App\Dtos\AssistantMessage)
+            @elseif ($message->role === 'assistant')
                 <x-chat.assistant-message :message="$message" :is-first="$loop->first" />
             @endif
         @endforeach

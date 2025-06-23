@@ -48,8 +48,6 @@ final class Chat extends Model
     protected $guarded = [];
 
     /**
-     * Get the user that the OAuth connection belongs to.
-     *
      * @return HasMany<Message, covariant $this>
      */
     public function messages(): HasMany
@@ -58,8 +56,6 @@ final class Chat extends Model
     }
 
     /**
-     * Get the user that the OAuth connection belongs to.
-     *
      * @return BelongsTo<User, covariant $this>
      */
     public function user(): BelongsTo

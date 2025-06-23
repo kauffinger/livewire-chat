@@ -4,20 +4,19 @@ namespace App\Livewire\Chats;
 
 use App\Enums\Visibility;
 use App\Models\Chat as ChatModel;
-use App\Models\Message;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Prism\Prism\Enums\ChunkType;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
+use Prism\Prism\Text\PendingRequest;
 
 class Show extends Component
 {
-    public array $messages = [];
-
     public ChatModel $chat;
 
     public string $newMessage = '';
@@ -29,21 +28,14 @@ class Show extends Component
         $this->chat = $chat;
 
         $this->model = $this->chat->model ?? 'gpt-4o-mini';
+    }
 
-        $this->messages = $this->chat->messages()
+    #[Computed]
+    public function messages(): array
+    {
+        return $this->chat->messages()
             ->orderBy('created_at')
             ->get()
-            ->map(function (Message $message) {
-                return match ($message->role) {
-                    'user' => new \App\Dtos\UserMessage($message->parts['text'] ?? ''),
-                    'assistant' => new \App\Dtos\AssistantMessage(
-                        $message->parts['text'] ?? '',
-                        $message->parts['toolCalls'] ?? [],
-                        []
-                    ),
-                    'tool_result' => new \App\Dtos\ToolResultMessage($message->parts['toolResults'] ?? []),
-                };
-            })
             ->all();
     }
 
@@ -57,8 +49,6 @@ class Show extends Component
             return;
         }
 
-        $this->messages[] = new \App\Dtos\UserMessage($userMessage);
-
         $this->chat->messages()->create([
             'role' => 'user',
             'parts' => [
@@ -68,7 +58,7 @@ class Show extends Component
         ]);
 
         $this->chat->update([
-            'title' => $this->messages[0]->content,
+            'title' => $this->messages[0]->parts['text'] ?? '',
         ]);
 
         $this->newMessage = '';
@@ -93,6 +83,11 @@ class Show extends Component
                         return (string) ($a + $b);
                     }),
             ])
+            ->whenProvider(Provider::OpenAI, function (PendingRequest $request) {
+                return $request->withProviderOptions([
+                    'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
+                ]);
+            })
             ->asStream();
 
         $parts = [];
@@ -108,16 +103,14 @@ class Show extends Component
         $toolResults = [];
 
         foreach ($generator as $chunk) {
-            $chunkTypeString = $this->mapChunkTypeToString($chunk->chunkType);
-
-            if (! isset($parts[$chunkTypeString])) {
-                $parts[$chunkTypeString] = '';
+            if (! isset($parts[$chunk->chunkType->value])) {
+                $parts[$chunk->chunkType->value] = '';
             }
 
-            $parts[$chunkTypeString] .= $chunk->text;
+            $parts[$chunk->chunkType->value] .= $chunk->text;
 
             // Update current chunk type but preserve accumulated data
-            $streamData['currentChunkType'] = $chunkTypeString;
+            $streamData['currentChunkType'] = $chunk->chunkType->value;
 
             switch ($chunk->chunkType) {
                 case ChunkType::Text:
@@ -174,7 +167,6 @@ class Show extends Component
                 'parts' => ['toolResults' => $toolResults],
                 'attachments' => '[]',
             ]);
-            $this->messages[] = new \App\Dtos\ToolResultMessage($toolResults);
         }
 
         // Create AssistantMessage without tool results in additionalContent
@@ -187,25 +179,9 @@ class Show extends Component
             $this->chat->touch();
         }
 
-        $this->messages[] = new \App\Dtos\AssistantMessage($fullText, $streamData['toolCalls'], []);
-
         if ($this->chat->messages()->count() === 2) {
             $this->dispatch('chat-started');
         }
-    }
-
-    /**
-     * Map Prism\Prism\Enums\ChunkType to the string keys used in the messages.parts JSON column.
-     */
-    private function mapChunkTypeToString(ChunkType $chunkType): string
-    {
-        return match ($chunkType) {
-            ChunkType::Text => 'text',
-            ChunkType::Thinking => 'thinking',
-            ChunkType::Meta => 'meta',
-            ChunkType::ToolCall => 'tool_call',
-            ChunkType::ToolResult => 'tool_result',
-        };
     }
 
     public function share(): void

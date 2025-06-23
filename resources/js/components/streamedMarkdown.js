@@ -29,7 +29,7 @@ export default function streamedMarkdown() {
         init() {
             // Configure markdown-it to match Vue component options
             this.md = markdownit({
-                html: false, // Disable HTML to prevent <?php interpretation issues
+                html: false,
                 breaks: true,
                 linkify: true,
                 typographer: true,
@@ -110,11 +110,9 @@ export default function streamedMarkdown() {
                     if (this.streamData.thinking) {
                         this.thinkingHtml = this.md.render(this.streamData.thinking);
                     }
-
-                    return;
                 }
             } catch (e) {
-                // Fall back to plain text parsing (backward compatibility)
+                // Fall back to plain text parsing (this renders the plain text messages)
                 // But preserve accumulated tool data to prevent indicators from disappearing
                 this.html = this.md.render(content);
 

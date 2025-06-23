@@ -6,7 +6,7 @@
     >
         <flux:heading>You</flux:heading>
         <flux:text>
-            {{ $message->content }}
+            {{ $message->parts['text'] ?? '' }}
         </flux:text>
     </div>
 </div>

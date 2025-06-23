@@ -1,7 +1,7 @@
 <div
     wire:loading.flex
     wire:target="runChatToolLoop"
-    wire:key="loading-{{ count($messages) }}"
+    wire:key="loading-{{ count($this->messages) }}"
     class="relative mx-auto hidden w-full max-w-4xl flex-1"
 >
     <div class="flex w-full flex-row justify-start">

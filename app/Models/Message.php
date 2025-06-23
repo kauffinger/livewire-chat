@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use Prism\Prism\ValueObjects\Messages\ToolResultMessage;
+use Prism\Prism\ValueObjects\Messages\UserMessage;
 
 /**
  * @property string $id
@@ -60,5 +63,14 @@ final class Message extends Model
     public function chat(): BelongsTo
     {
         return $this->belongsTo(Chat::class);
+    }
+
+    public function toPrism(): \Prism\Prism\Contracts\Message
+    {
+        return match ($this->role) {
+            'user' => new UserMessage($this->parts['text'] ?? ''),
+            'assistant' => new AssistantMessage($this->parts['text'] ?? '', $this->parts['tool_calls'] ?? []),
+            'tool_result' => new ToolResultMessage($this->parts['tool_results'] ?? []),
+        };
     }
 }
