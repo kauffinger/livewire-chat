@@ -177,6 +177,8 @@ class Show extends Component
                 'attachments' => '[]',
             ]);
             $this->chat->touch();
+
+            unset($this->messages);
         }
 
         if ($this->chat->messages()->count() === 2) {

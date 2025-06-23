@@ -4,12 +4,29 @@
     <div
         class="prose prose-sm max-h-fit max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
         x-data="streamedMarkdown()"
-        x-init="
-            // Initialize with static message data (tool calls only, no tool results)
-            streamData.toolCalls = @js($message->toolCalls ?? []);
-        "
     >
         <flux:heading>AI</flux:heading>
+
+        <!-- Thinking preview (collapsible) -->
+        <div x-show="hasThinking()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
+            <button
+                @click="toggleThinking()"
+                class="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+                <flux:icon.chevron-right x-show="!showThinking" class="h-3 w-3" />
+                <flux:icon.chevron-down x-show="showThinking" class="h-3 w-3" />
+                🧠
+            </button>
+            <div x-show="showThinking" x-collapse class="mt-2">
+                <div class="rounded bg-zinc-100 p-2 text-xs dark:bg-zinc-800">
+                    <article
+                        wire:ignore
+                        class="prose prose-zinc prose-sm prose-p:m-0 prose-code:font-mono prose-pre:text-xs dark:prose-invert max-w-none break-words"
+                        x-html="thinkingHtml"
+                    ></article>
+                </div>
+            </div>
+        </div>
 
         <!-- Tool calls display -->
         <div x-show="hasToolCalls()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">

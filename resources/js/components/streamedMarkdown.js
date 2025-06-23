@@ -98,32 +98,17 @@ export default function streamedMarkdown() {
             }
 
             // Try to parse as JSON first (new format)
-            try {
-                const jsonData = JSON.parse(content);
-                if (jsonData && typeof jsonData === 'object') {
-                    this.streamData = { ...this.streamData, ...jsonData };
+            const jsonData = JSON.parse(content);
+            if (jsonData && typeof jsonData === 'object') {
+                this.streamData = { ...this.streamData, ...jsonData };
 
-                    // Render main text content
-                    this.html = this.md.render(this.streamData.text || '');
+                // Render main text content
+                this.html = this.md.render(this.streamData.text || '');
 
-                    // Render thinking content if available
-                    if (this.streamData.thinking) {
-                        this.thinkingHtml = this.md.render(this.streamData.thinking);
-                    }
+                // Render thinking content if available
+                if (this.streamData.thinking) {
+                    this.thinkingHtml = this.md.render(this.streamData.thinking);
                 }
-            } catch (e) {
-                // Fall back to plain text parsing (this renders the plain text messages)
-                // But preserve accumulated tool data to prevent indicators from disappearing
-                this.html = this.md.render(content);
-
-                // Only reset text-related fields, preserve tool data
-                this.streamData = {
-                    ...this.streamData, // Preserve existing tool calls/results
-                    text: content,
-                    thinking: '',
-                    meta: '',
-                    currentChunkType: 'text',
-                };
             }
         },
 
