@@ -57,7 +57,7 @@ class Show extends Component
             'attachments' => '[]',
         ]);
 
-        if($this->chat->messages()->count() === 1){
+        if ($this->chat->messages()->count() === 1) {
             $this->chat->update([
                 'title' => $this->messages[0]->parts['text'] ?? '',
             ]);
@@ -92,7 +92,6 @@ class Show extends Component
             })
             ->asStream();
 
-        $parts = [];
         $streamData = [
             'text' => '',
             'thinking' => '',
@@ -101,30 +100,9 @@ class Show extends Component
             'toolResults' => [],
             'currentChunkType' => 'text',
         ];
-        $fullText = '';
-        $toolResults = [];
 
         foreach ($generator as $chunk) {
-            if (! isset($parts[$chunk->chunkType->value])) {
-                $parts[$chunk->chunkType->value] = '';
-            }
-
-            $parts[$chunk->chunkType->value] .= $chunk->text;
-
-            // Update current chunk type but preserve accumulated data
-            $streamData['currentChunkType'] = $chunk->chunkType->value;
-
             switch ($chunk->chunkType) {
-                case ChunkType::Text:
-                    $streamData['text'] .= $chunk->text;
-                    $fullText .= $chunk->text;
-                    break;
-                case ChunkType::Thinking:
-                    $streamData['thinking'] .= $chunk->text;
-                    break;
-                case ChunkType::Meta:
-                    $streamData['meta'] .= $chunk->text;
-                    break;
                 case ChunkType::ToolCall:
                     // Extract tool calls from the chunk's toolCalls array and add to accumulated data
                     foreach ($chunk->toolCalls as $toolCall) {
@@ -149,33 +127,33 @@ class Show extends Component
                             'toolCallResultId' => $toolResult->toolCallResultId ?? null,
                         ];
                         $streamData['toolResults'][] = $toolResultData;
-                        $toolResults[] = $toolResultData;
                     }
                     break;
+                default:
+                    $streamData[$chunk->chunkType->value] .= $chunk->text;
             }
 
-            $this->stream('streamed-message', json_encode($streamData), true);
-        }
-
-        // Store tool calls in assistant message parts for persistence
-        if ($streamData['toolCalls'] !== []) {
-            $parts['toolCalls'] = $streamData['toolCalls'];
+            $this->stream(
+                'streamed-message',
+                json_encode([...$streamData, 'currentChunkType' => $chunk->chunkType->value]),
+                true
+            );
         }
 
         // Create separate ToolResultMessage if we have tool results
-        if ($toolResults !== []) {
+        if ($streamData['toolResults'] !== []) {
             $this->chat->messages()->create([
                 'role' => 'tool_result',
-                'parts' => ['toolResults' => $toolResults],
+                'parts' => ['toolResults' => $streamData['toolResults']],
                 'attachments' => '[]',
             ]);
         }
 
         // Create AssistantMessage without tool results in additionalContent
-        if ($parts !== []) {
+        if ($streamData !== []) {
             $this->chat->messages()->create([
                 'role' => 'assistant',
-                'parts' => $parts,
+                'parts' => $streamData,
                 'attachments' => '[]',
             ]);
             $this->chat->touch();
