@@ -30,7 +30,7 @@
 
         <!-- Tool calls display -->
         <div x-show="hasToolCalls()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-            <template x-for="toolCall in streamData.toolCalls" :key="toolCall.name + Date.now()">
+            <template x-for="toolCall in streamData.toolCalls" :key="toolCall.resultId">
                 <div class="mt-1 flex items-center gap-2 text-xs">
                     <flux:icon.wrench-screwdriver class="h-3 w-3 text-blue-500" />
                     <span x-text="toolCall.name" class="font-mono text-blue-600 dark:text-blue-400"></span>
