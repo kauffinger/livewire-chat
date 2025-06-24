@@ -1,4 +1,4 @@
-<div x-data @chat-started.window="$wire.$refresh()">
+<div x-data>
     <flux:navlist.group heading="{{ __('Chats') }}">
         <!-- New Chat button - fixed at top -->
         <div class="mb-2 flex-shrink-0">
@@ -21,7 +21,7 @@
                 <flux:navlist.item
                     :href="route('chat.show', $chat['id'])"
                     icon="layout-grid"
-                    :current="request()->routeIs('chat.show') && request()->route('chat')?->id === $chat['id']"
+                    :current="$activeChatId === $chat['id']"
                     wire:key="$chat['id']"
                     wire:navigate.hover
                 >

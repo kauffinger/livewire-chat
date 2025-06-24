@@ -57,9 +57,11 @@ class Show extends Component
             'attachments' => '[]',
         ]);
 
-        $this->chat->update([
-            'title' => $this->messages[0]->parts['text'] ?? '',
-        ]);
+        if($this->chat->messages()->count() === 1){
+            $this->chat->update([
+                'title' => $this->messages[0]->parts['text'] ?? '',
+            ]);
+        }
 
         $this->newMessage = '';
 
@@ -156,12 +158,12 @@ class Show extends Component
         }
 
         // Store tool calls in assistant message parts for persistence
-        if (! empty($streamData['toolCalls'])) {
+        if ($streamData['toolCalls'] !== []) {
             $parts['toolCalls'] = $streamData['toolCalls'];
         }
 
         // Create separate ToolResultMessage if we have tool results
-        if (! empty($toolResults)) {
+        if ($toolResults !== []) {
             $this->chat->messages()->create([
                 'role' => 'tool_result',
                 'parts' => ['toolResults' => $toolResults],
@@ -179,10 +181,6 @@ class Show extends Component
             $this->chat->touch();
 
             unset($this->messages);
-        }
-
-        if ($this->chat->messages()->count() === 2) {
-            $this->dispatch('chat-started');
         }
     }
 
