@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Dtos\StreamData;
 use Prism\Prism\Enums\ChunkType;
 use Prism\Prism\Text\Chunk;
+use Prism\Prism\ValueObjects\Meta;
 
 class UpdateStreamDataFromPrismChunk
 {
@@ -38,7 +39,7 @@ class UpdateStreamDataFromPrismChunk
                 }
                 break;
             case ChunkType::Meta:
-                if ($chunk->meta) {
+                if ($chunk->meta instanceof Meta) {
                     $streamData->meta[] = $chunk->meta;
                 }
                 break;

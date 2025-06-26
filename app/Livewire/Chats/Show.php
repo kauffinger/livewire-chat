@@ -36,8 +36,7 @@ class Show extends Component
     #[Computed]
     public function messages(): array
     {
-        return $this->chat->messages()
-            ->orderBy('created_at')
+        return $this->chat->messages()->oldest()
             ->get()
             ->all();
     }
@@ -74,22 +73,17 @@ class Show extends Component
                 Tool::as('sum')->withNumberParameter('a', 'The first number to sum')
                     ->withNumberParameter('b', 'The second number to sum')
                     ->for('Sums two numbers together')
-                    ->using(function ($a, $b) {
-                        return (string) ($a + $b);
-                    }),
+                    ->using(fn ($a, $b) => (string) ($a + $b)),
             ])
-            ->whenProvider(Provider::OpenAI, function (PendingRequest $request) {
-
-                return match ($this->model) {
-                    'gpt-4o',
-                    'gpt-4o-mini',
-                    'gpt-3.5-turbo',
-                    'gpt-4',
-                    'gpt-4.1-nano-2025-04-14' => $request,
-                    default => $request->withProviderOptions([
-                        'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
-                    ]),
-                };
+            ->whenProvider(Provider::OpenAI, fn (PendingRequest $request) => match ($this->model) {
+                'gpt-4o',
+                'gpt-4o-mini',
+                'gpt-3.5-turbo',
+                'gpt-4',
+                'gpt-4.1-nano-2025-04-14' => $request,
+                default => $request->withProviderOptions([
+                    'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
+                ]),
             })
             ->asStream();
 

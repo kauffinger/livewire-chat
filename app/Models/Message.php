@@ -38,7 +38,7 @@ use Prism\Prism\ValueObjects\Messages\UserMessage;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Message whereRole($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Message whereUpdatedAt($value)
  *
- * @mixin \Eloquent
+ * @mixin \Illuminate\Database\Eloquent\Model
  */
 final class Message extends Model
 {
@@ -48,12 +48,6 @@ final class Message extends Model
     use HasUuids;
 
     protected $guarded = [];
-
-    protected $casts = [
-        'parts' => 'array',
-        'attachments' => 'array',
-        'is_upvoted' => 'boolean',
-    ];
 
     /**
      * Get the user that the OAuth connection belongs to.
@@ -72,5 +66,14 @@ final class Message extends Model
             'assistant' => new AssistantMessage($this->parts['text'] ?? '', $this->parts['tool_calls'] ?? []),
             'tool_result' => new ToolResultMessage($this->parts['tool_results'] ?? []),
         };
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'parts' => 'array',
+            'attachments' => 'array',
+            'is_upvoted' => 'boolean',
+        ];
     }
 }

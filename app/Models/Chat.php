@@ -35,7 +35,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Chat whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Chat whereVisibility($value)
  *
- * @mixin \Eloquent
+ * @mixin \Illuminate\Database\Eloquent\Model
  */
 final class Chat extends Model
 {
