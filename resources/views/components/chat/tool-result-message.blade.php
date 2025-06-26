@@ -25,7 +25,11 @@
                         </div>
                         <div class="pl-6 text-xs text-green-600 dark:text-green-400">
                             <div
-                                x-text="typeof result.result === 'string' ? result.result : JSON.stringify(result.result)"
+                                x-text="
+                                    typeof result.result === 'string'
+                                        ? result.result
+                                        : JSON.stringify(result.result)
+                                "
                                 class="break-words"
                             ></div>
                         </div>
