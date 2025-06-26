@@ -28,6 +28,8 @@ class Show extends Component
 
     public function mount(ChatModel $chat): void
     {
+        abort_unless(Auth::user()->can('view', $chat), 403);
+
         $this->chat = $chat;
 
         $this->model = $this->chat->model ?? 'gpt-4o-mini';
