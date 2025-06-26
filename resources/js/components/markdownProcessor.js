@@ -9,7 +9,7 @@
 import markdownit from 'markdown-it';
 import hljs from 'highlight.js';
 
-export default function streamedMarkdown() {
+export default function markdownProcessor() {
     return {
         md: null,
         html: '', // rendered output for <article x-html="html">

@@ -1,6 +1,6 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import streamedMarkdown from './components/streamedMarkdown.js';
+import markdownProcessor from './components/markdownProcessor.js';
 
-Alpine.data('streamedMarkdown', streamedMarkdown);
+Alpine.data('markdownProcessor', markdownProcessor);
 
 Livewire.start();
