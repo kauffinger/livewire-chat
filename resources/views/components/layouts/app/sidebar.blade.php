@@ -26,7 +26,7 @@
             <!-- Scrollable chat section -->
             <div class="min-h-0 flex-1 overflow-hidden">
                 <flux:navlist variant="outline" class="h-full">
-                    <livewire:chat.sidebar />
+                    <livewire:chat-sidebar />
                 </flux:navlist>
             </div>
 

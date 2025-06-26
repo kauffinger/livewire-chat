@@ -23,7 +23,7 @@
                     icon="layout-grid"
                     :current="$activeChatId === $chat['id']"
                     wire:key="$chat['id']"
-                    wire:navigate.hover
+                    wire:navigate
                 >
                     {{ $chat['title'] }}
                 </flux:navlist.item>

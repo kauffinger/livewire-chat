@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Chat;
+namespace App\Livewire;
 
 use App\Models\Chat as ChatModel;
 use Illuminate\Support\Facades\Auth;
@@ -9,7 +9,7 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class Sidebar extends Component
+class ChatSidebar extends Component
 {
     public ?string $activeChatId = null;
 
@@ -45,6 +45,6 @@ class Sidebar extends Component
 
     public function render(): View
     {
-        return view('livewire.chat.sidebar');
+        return view('livewire.chat-sidebar');
     }
 }
