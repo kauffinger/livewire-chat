@@ -6,7 +6,7 @@ use Livewire\Livewire;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-test('confirm password screen can be rendered', function () {
+test('confirm password screen can be rendered', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/confirm-password');
@@ -14,7 +14,7 @@ test('confirm password screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('password can be confirmed', function () {
+test('password can be confirmed', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
@@ -28,7 +28,7 @@ test('password can be confirmed', function () {
         ->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('password is not confirmed with invalid password', function () {
+test('password is not confirmed with invalid password', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);

@@ -1,0 +1,7 @@
+{
+    "useLaravelPint": true,
+    "attributeJsOptions": {
+        "semi": true,
+        "printWidth": 120
+    }
+}

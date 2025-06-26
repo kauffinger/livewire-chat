@@ -5,13 +5,13 @@ use Livewire\Livewire;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-test('registration screen can be rendered', function () {
+test('registration screen can be rendered', function (): void {
     $response = $this->get('/register');
 
     $response->assertStatus(200);
 });
 
-test('new users can register', function () {
+test('new users can register', function (): void {
     $response = Livewire::test(Register::class)
         ->set('name', 'Test User')
         ->set('email', 'test@example.com')

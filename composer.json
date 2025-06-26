@@ -18,17 +18,23 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
-        "prism-php/prism": "^0.68.0"
+        "prism-php/prism": "^0.78.0",
+        "symfony/http-foundation": "v7.2.6"
     },
     "require-dev": {
+        "calebdw/larastan-livewire": "^2.0",
+        "driftingly/rector-laravel": "^2.0",
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.1",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.18",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^3.8",
-        "pestphp/pest-plugin-laravel": "^3.2"
+        "pestphp/pest-plugin-laravel": "^3.1",
+        "pestphp/pest-plugin-livewire": "^3.0",
+        "rector/rector": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -65,6 +71,15 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "format": [
+            "vendor/bin/rector",
+            "vendor/bin/pint",
+            "npm run format"
+        ],
+        "format:check": [
+            "vendor/bin/pint --test",
+            "npm run format:check"
         ]
     },
     "extra": {

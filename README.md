@@ -11,12 +11,27 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 
 ## Features
 
-*   **Livewire-Powered:** Build dynamic interfaces with PHP.
-*   **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
-*   **FluxUI Components:** Beautiful, pre-built UI components for a polished look and feel.
-*   **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
-*   **Minimal JavaScript:** Focus on your PHP backend.
-*   **TailwindCSS Styled:** Includes a TailwindCSS setup with a typography plugin for rendering markdown.
+### Chat System
+
+- **Multi-Chat Management:** Create, manage, and navigate between multiple chat conversations
+- **Chat Sidebar:** Quick access to recent chats with intelligent navigation
+- **Chat Sharing:** Share conversations publicly or keep them private with visibility controls
+- **Model Selection:** Choose from different LLM models (GPT-4o, GPT-4o-mini, etc.) per chat
+- **Persistent History:** All conversations are saved and accessible across sessions
+
+### LLM Integration
+
+- **Livewire-Powered:** Build dynamic interfaces with PHP.
+- **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
+- **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
+- **Tool Support:** Built-in LLM tool calling with visual feedback and result display
+
+### UI & Design
+
+- **FluxUI Components:** Beautiful, pre-built UI components for a polished look and feel.
+- **Minimal JavaScript:** Focus on your PHP backend.
+- **TailwindCSS Styled:** Includes a TailwindCSS setup with a typography plugin for rendering markdown.
+- **Real-time Updates:** Seamless UI updates using Livewire streams
 
 ## Installation
 
@@ -68,45 +83,75 @@ Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_
 
 ### 2. Explore the Chat Interface
 
-Navigate to your application's `/dashboard` route (or wherever you've set up the chat component) to start interacting with the chat interface.
+Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:
 
-## Core Components
+- Create new chats from the sidebar
+- Switch between existing conversations
+- Share chats publicly or keep them private
+- Change the LLM model for each chat
+- Use built-in tools (like the example sum calculator)
 
-### `app/Livewire/Chat.php`
+## Architecture
 
-This is the heart of the chat functionality.
+### Core Components
 
-### `resources/views/livewire/chat.blade.php`
+- **`app/Livewire/Chats/Index.php`** - Paginate over all of your chats
+- **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming, tool calls, and message management
+- **`app/Livewire/ChatSidebar.php`** - Chat navigation, history, and new chat creation
+- **`app/Models/Chat.php`** - Chat model with user relationships and visibility controls
+- **`app/Models/Message.php`** - Message model with tool call/result support and Prism integration
 
-This Blade view renders the chat interface.
+### Business Logic Layer
+
+- **`app/Actions/`** - Clean action classes for complex operations:
+  - `AddNewUserMessageToChat` - Handles user message persistence
+  - `UpdateStreamDataFromPrismChunk` - Processes streaming LLM responses
+  - `PersistStreamDataToMessages` - Saves complete responses to database
+- **`app/Dtos/StreamData.php`** - Type-safe data transfer object for streaming
+- **`app/Policies/ChatPolicy.php`** - Authorization rules for chat access and sharing
+
+### UI Components
+
+- **Chat Interface:** Real-time streaming with markdown rendering
+- **Tool Results Display:** Visual feedback for LLM tool executions
+- **Model Selector:** Per-chat model configuration
+- **Sharing Controls:** Public/private visibility management
 
 ## How it Works
 
-1.  User types a message in `x-chat.message-input` and hits send.
-2.  `sendMessage()` in `Chat.php` is triggered.
-    *   The user's message is added to the `$messages` array.
-    *   The input field is cleared.
-    *   `$this->js('$wire.runChatToolLoop()')` is called, which immediately invokes the `runChatToolLoop()` method. This allows the UI to update with the user's message before the LLM call.
-3.  `runChatToolLoop()`:
-    *   Constructs a request to the LLM using Prism, including the system prompt and the current chat history.
-    *   The request is sent as a stream.
-    *   As tokens arrive from the LLM:
-        *   They are appended to a local `$message` variable.
-        *   The `stream()` method sends the accumulated `$message` (converted to markdown) to the frontend, updating the part of the view listening to `streamed-message`. This is typically handled by the `x-chat.assistant-message` component.
-4.  Once the LLM finishes generating its response:
-    *   The complete assistant message is added to the `$messages` array. The temporary streamed display is effectively replaced by the final message in the loop.
+### Message Flow
+
+1. **User Input:** Message typed in chat interface and submitted
+2. **Message Processing:** `AddNewUserMessageToChat` action persists user message
+3. **LLM Streaming:** `runChatToolLoop()` initiates real-time streaming with Prism
+4. **Stream Handling:** `UpdateStreamDataFromPrismChunk` processes each chunk (text, tool calls, results)
+5. **UI Updates:** Livewire streams update the interface in real-time
+6. **Persistence:** `PersistStreamDataToMessages` saves complete conversation
+
+### Tool Integration
+
+- **Tool Definitions:** Tools are defined in the `runChatToolLoop()` method
+- **Automatic Execution:** LLM can call tools during conversation flow
+- **Visual Feedback:** Tool calls and results are displayed with dedicated UI components
+
+### Technical Implementation
+
+- **UUID Models:** All models use UUIDs for security and scalability
+- **Policy Authorization:** Fine-grained access control with `ChatPolicy`
+- **Type Safety:** DTOs and strong typing throughout the application
+- **Testing:** Comprehensive Pest test suite with Livewire integration
+- **Code Quality:** Laravel Pint, Rector, and Prettier for consistent formatting
 
 ## Contributing
 
 Contributions are welcome! If you'd like to improve the Livewire Chat Kit, please feel free to:
 
-*   Report a bug.
-*   Suggest a new feature.
-*   Submit a pull request.
+- Report a bug.
+- Suggest a new feature.
+- Submit a pull request.
 
 Please visit the [GitHub repository](https://github.com/kauffinger/livewire-chat-kit) to contribute.
 
 ## License
 
 This project is open-sourced software licensed under the [MIT license](LICENSE.md).
-```
