@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Chats;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -13,7 +14,7 @@ class Index extends Component
 
     public function createNewChat(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $chat = $user->chats()->create([
@@ -26,7 +27,7 @@ class Index extends Component
 
     public function render(): View
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $chats = $user->chats()
