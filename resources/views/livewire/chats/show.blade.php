@@ -44,7 +44,7 @@
         x-data
         x-init="$el.scrollTop = $el.scrollHeight"
     >
-        @include('livewire.loading-indicator')
+        @include('livewire.chats.show.loading-indicator')
 
         @foreach (array_reverse($this->messages) as $message)
             @if ($message->role === 'user')
@@ -55,7 +55,7 @@
         @endforeach
 
         @can('update', $chat)
-            @include('livewire.message-input')
+            @include('livewire.chats.show.message-input')
         @endcan
     </div>
 </div>
