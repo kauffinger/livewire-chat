@@ -71,17 +71,25 @@ class Show extends Component
             ->withMessages(collect($this->messages)->map->toPrism()->all())
             ->withMaxSteps(5)
             ->withTools([
-                Tool::as('sum')->withNumberParameter('a', 'The first number to sum', required: true)
-                    ->withNumberParameter('b', 'The second number to sum', required: true)
+                Tool::as('sum')->withNumberParameter('a', 'The first number to sum')
+                    ->withNumberParameter('b', 'The second number to sum')
                     ->for('Sums two numbers together')
                     ->using(function ($a, $b) {
                         return (string) ($a + $b);
                     }),
             ])
             ->whenProvider(Provider::OpenAI, function (PendingRequest $request) {
-                return $request->withProviderOptions([
-                    'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
-                ]);
+
+                return match ($this->model) {
+                    'gpt-4o',
+                    'gpt-4o-mini',
+                    'gpt-3.5-turbo',
+                    'gpt-4',
+                    'gpt-4.1-nano-2025-04-14' => $request,
+                    default => $request->withProviderOptions([
+                        'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
+                    ]),
+                };
             })
             ->asStream();
 
