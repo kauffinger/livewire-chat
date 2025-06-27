@@ -97,7 +97,6 @@ export default function markdownProcessor() {
                 return;
             }
 
-            // Try to parse as JSON first (new format)
             const jsonData = JSON.parse(content);
             if (jsonData && typeof jsonData === 'object') {
                 this.streamData = { ...this.streamData, ...jsonData };
