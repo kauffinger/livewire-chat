@@ -50,11 +50,7 @@
             wire:key="loading-{{ count($this->messages) }}"
             class="relative mx-auto hidden w-full max-w-4xl flex-1"
         >
-            <x-chat.assistant-message
-                :is-loading="true"
-                wire-stream="streamed-message"
-                :wire-replace="true"
-            />
+            <x-chat.assistant-message :is-loading="true" wire-stream="streamed-message" :wire-replace="true" />
         </div>
 
         @foreach (array_reverse($this->messages) as $message)
