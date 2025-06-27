@@ -27,7 +27,6 @@ export default function markdownProcessor() {
         showThinking: false,
 
         init() {
-            // Configure markdown-it to match Vue component options
             this.md = markdownit({
                 html: false,
                 breaks: true,
@@ -45,10 +44,8 @@ export default function markdownProcessor() {
                 },
             });
 
-            // Configure linkify to disable fuzzy email detection (matching Vue component)
             this.md.linkify.set({ fuzzyEmail: false });
 
-            // Load initial theme based on current dark mode state
             this.loadHighlightTheme();
 
             // Watch for dark mode changes and update theme accordingly
@@ -74,10 +71,8 @@ export default function markdownProcessor() {
                 this.currentThemeLink = null;
             }
 
-            // Determine which theme to use based on dark mode
             const isDark = this.$flux?.dark || false;
 
-            // Use local CSS files from public directory
             const themeUrl = isDark ? '/css/highlight/github-dark.css' : '/css/highlight/github-light.css';
 
             // Create and append new theme link
