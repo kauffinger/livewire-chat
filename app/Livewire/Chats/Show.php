@@ -9,6 +9,7 @@ use App\Dtos\StreamData;
 use App\Enums\Visibility;
 use App\Models\Chat as ChatModel;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -45,7 +46,7 @@ class Show extends Component
 
     public function sendMessage(AddNewUserMessageToChat $addNewUserMessageToChat): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        abort_unless(Auth::check() && Gate::allows('update', $this->chat), 403);
 
         $userMessage = trim($this->newMessage);
 
@@ -64,7 +65,7 @@ class Show extends Component
         PersistStreamDataToMessages $persistStreamDataToMessages,
         UpdateStreamDataFromPrismChunk $updateStreamDataFromPrismChunk,
     ): void {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        abort_unless(Auth::check() && Gate::allows('update', $this->chat), 403);
 
         $generator = Prism::text()
             ->using(Provider::OpenAI, $this->model)
@@ -75,9 +76,9 @@ class Show extends Component
                 Tool::as('sum')->withNumberParameter('a', 'The first number to sum')
                     ->withNumberParameter('b', 'The second number to sum')
                     ->for('Sums two numbers together')
-                    ->using(fn ($a, $b) => (string) ($a + $b)),
+                    ->using(fn($a, $b) => (string) ($a + $b)),
             ])
-            ->whenProvider(Provider::OpenAI, fn (PendingRequest $request) => match ($this->model) {
+            ->whenProvider(Provider::OpenAI, fn(PendingRequest $request) => match ($this->model) {
                 'gpt-4o',
                 'gpt-4o-mini',
                 'gpt-3.5-turbo',
@@ -109,7 +110,7 @@ class Show extends Component
 
     public function share(): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        abort_unless(Auth::check() && Gate::allows('update', $this->chat), 403);
 
         $this->chat->update([
             'visibility' => Visibility::Public->value,
@@ -120,7 +121,7 @@ class Show extends Component
 
     public function unshare(): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        abort_unless(Auth::check() && Gate::allows('update', $this->chat), 403);
 
         $this->chat->update([
             'visibility' => Visibility::Private->value,
@@ -131,7 +132,7 @@ class Show extends Component
 
     public function setModel(string $value): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        abort_unless(Auth::check() && Gate::allows('update', $this->chat), 403);
 
         $this->model = $value;
 
