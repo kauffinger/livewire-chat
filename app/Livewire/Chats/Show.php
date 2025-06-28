@@ -9,7 +9,7 @@ use App\Dtos\StreamData;
 use App\Enums\Visibility;
 use App\Models\Chat as ChatModel;
 use Flux\Flux;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -28,7 +28,7 @@ class Show extends Component
 
     public function mount(ChatModel $chat): void
     {
-        abort_unless(Auth::user()->can('view', $chat), 403);
+        abort_unless(Gate::allows('view', $chat), 403);
 
         $this->chat = $chat;
 
@@ -45,7 +45,7 @@ class Show extends Component
 
     public function sendMessage(AddNewUserMessageToChat $addNewUserMessageToChat): void
     {
-        abort_unless(Auth::user()->can('update', $this->chat), 403);
+        abort_unless(Gate::allows('update', $this->chat), 403);
 
         $userMessage = trim($this->newMessage);
 
@@ -64,7 +64,7 @@ class Show extends Component
         PersistStreamDataToMessages $persistStreamDataToMessages,
         UpdateStreamDataFromPrismChunk $updateStreamDataFromPrismChunk,
     ): void {
-        abort_unless(Auth::user()->can('update', $this->chat), 403);
+        abort_unless(Gate::allows('update', $this->chat), 403);
 
         $generator = Prism::text()
             ->using(Provider::OpenAI, $this->model)
@@ -109,7 +109,7 @@ class Show extends Component
 
     public function share(): void
     {
-        abort_unless(Auth::user()->can('update', $this->chat), 403);
+        abort_unless(Gate::allows('update', $this->chat), 403);
 
         $this->chat->update([
             'visibility' => Visibility::Public->value,
@@ -120,7 +120,7 @@ class Show extends Component
 
     public function unshare(): void
     {
-        abort_unless(Auth::user()->can('update', $this->chat), 403);
+        abort_unless(Gate::allows('update', $this->chat), 403);
 
         $this->chat->update([
             'visibility' => Visibility::Private->value,
@@ -131,7 +131,7 @@ class Show extends Component
 
     public function setModel(string $value): void
     {
-        abort_unless(Auth::user()->can('update', $this->chat), 403);
+        abort_unless(Gate::allows('update', $this->chat), 403);
 
         $this->model = $value;
 
