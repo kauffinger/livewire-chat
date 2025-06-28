@@ -51,7 +51,7 @@ After installation, make sure to:
 
 ### 1. Configure LLM Provider
 
-This starter kit uses [Prism](https://github.com/prismphp/prism) to interact with LLMs. By default, it's configured to use OpenAI's `gpt-4o-mini`. You'll need to add your API key to your `.env` file.
+This starter kit uses [Prism](https://github.com/prism-php/prism) to interact with LLMs. By default, it's configured to use OpenAI's `gpt-4o-mini`. You'll need to add your API key to your `.env` file.
 
 ```env
 OPENAI_API_KEY=your-openai-api-key
