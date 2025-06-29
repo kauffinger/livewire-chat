@@ -28,7 +28,7 @@ class Show extends Component
 
     public function mount(ChatModel $chat): void
     {
-        abort_unless(Gate::allows('view', $chat), 403);
+        Gate::authorize('view', $chat);
 
         $this->chat = $chat;
 
@@ -45,7 +45,7 @@ class Show extends Component
 
     public function sendMessage(AddNewUserMessageToChat $addNewUserMessageToChat): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        Gate::authorize('update', $this->chat);
 
         $userMessage = trim($this->newMessage);
 
@@ -64,7 +64,7 @@ class Show extends Component
         PersistStreamDataToMessages $persistStreamDataToMessages,
         UpdateStreamDataFromPrismChunk $updateStreamDataFromPrismChunk,
     ): void {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        Gate::authorize('update', $this->chat);
 
         $generator = Prism::text()
             ->using(Provider::OpenAI, $this->model)
@@ -109,7 +109,7 @@ class Show extends Component
 
     public function share(): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        Gate::authorize('update', $this->chat);
 
         $this->chat->update([
             'visibility' => Visibility::Public->value,
@@ -120,7 +120,7 @@ class Show extends Component
 
     public function unshare(): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        Gate::authorize('update', $this->chat);
 
         $this->chat->update([
             'visibility' => Visibility::Private->value,
@@ -131,7 +131,7 @@ class Show extends Component
 
     public function setModel(string $value): void
     {
-        abort_unless(Gate::allows('update', $this->chat), 403);
+        Gate::authorize('update', $this->chat);
 
         $this->model = $value;
 
