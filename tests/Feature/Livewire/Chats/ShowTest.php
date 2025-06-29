@@ -19,7 +19,7 @@ it('shows user\'s chat', function (): void {
         ->assertOk();
 });
 
-it('disallows others to show the chat', function (): void {
+it('disallows other users to show the chat', function (): void {
     $user = User::factory()->create();
     $chat = Chat::factory()
         ->recycle($user)
@@ -28,6 +28,17 @@ it('disallows others to show the chat', function (): void {
 
     $otherUser = User::factory()->create();
     actingAs($otherUser);
+
+    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+        ->assertForbidden();
+});
+
+it('disallows guests to show the chat', function (): void {
+    $user = User::factory()->create();
+    $chat = Chat::factory()
+        ->recycle($user)
+        ->withMessages()
+        ->create(['visibility' => 'private']);
 
     livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
         ->assertForbidden();
@@ -42,6 +53,17 @@ it('shows chat to other users if it\'s public', function (): void {
 
     $otherUser = User::factory()->create();
     actingAs($otherUser);
+
+    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+        ->assertOk();
+});
+
+it('shows chat to guests if it\'s public', function (): void {
+    $user = User::factory()->create();
+    $chat = Chat::factory()
+        ->recycle($user)
+        ->withMessages()
+        ->create(['visibility' => 'public']);
 
     livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
         ->assertOk();
