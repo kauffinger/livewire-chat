@@ -73,8 +73,7 @@
             })
         },
         getVariantClasses(variant) {
-            // Use typical FluxUI neutral styling for all variants
-            return 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
+            return 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-600'
         },
         getIconColorClasses(variant) {
             switch (variant) {
@@ -136,7 +135,7 @@
                 x-transition:leave-end="scale-90 transform opacity-0"
                 @mouseenter="pauseTimer()"
                 @mouseleave="resumeTimer()"
-                :class="'pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg shadow-sm ' + getVariantClasses(toast.variant)"
+                :class="'pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg shadow-xs dark:shadow-none ' + getVariantClasses(toast.variant)"
                 role="alert"
             >
                 <div class="p-4">
