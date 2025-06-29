@@ -116,6 +116,7 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 - **Tool Results Display:** Visual feedback for LLM tool executions
 - **Model Selector:** Per-chat model configuration
 - **Sharing Controls:** Public/private visibility management
+- **Toast Notifications:** Built-in toast system for user feedback
 
 ## How it Works
 
@@ -141,6 +142,58 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 - **Type Safety:** DTOs and strong typing throughout the application
 - **Testing:** Comprehensive Pest test suite with Livewire integration
 - **Code Quality:** Laravel Pint, Rector, and Prettier for consistent formatting
+
+## Toast Notifications
+
+The chat kit includes a built-in toast notification system for user feedback.
+
+### Basic Setup
+
+Add the toast container to your layout (e.g., in `resources/views/layouts/app.blade.php`):
+
+```blade
+<x-toast.toast-container position="bottom-right" />
+```
+
+### Usage in Livewire Components
+
+```php
+// In your Livewire component - using named parameters
+$this->dispatch('toast',
+    variant: 'success',
+    title: 'Success!',
+    description: 'Your changes have been saved.',
+    icon: 'check-circle',
+    duration: 3000
+);
+```
+
+### Usage with Alpine.js
+
+```blade
+<button
+  @click="$dispatch('toast', {
+    variant: 'success',
+    title: 'Success!',
+    description: 'Your changes have been saved.'
+})"
+>
+  Show Success Toast
+</button>
+```
+
+### Toast Options
+
+- `variant`: 'default' | 'success' | 'error' | 'danger' | 'warning' | 'info'
+- `title`: The main message
+- `description`: Additional details (optional)
+- `icon`: Icon name (optional, auto-set based on variant)
+- `dismissible`: Whether the toast can be dismissed (default: true)
+- `duration`: Auto-dismiss after milliseconds (default: 5000, use 0 to disable)
+
+### Container Positions
+
+- `position`: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' (default: 'bottom-right')
 
 ## Contributing
 
