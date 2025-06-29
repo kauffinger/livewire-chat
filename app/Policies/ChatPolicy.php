@@ -22,11 +22,11 @@ final class ChatPolicy
      */
     public function view(?User $user, Chat $chat): bool
     {
-        if (! $user instanceof User) {
-            return $chat->visibility === 'public';
+        if ($chat->visibility === 'public') {
+            return true;
         }
 
-        return $user->id === $chat->user_id || $chat->visibility === 'public';
+        return $user?->id === $chat->user_id;
     }
 
     /**
