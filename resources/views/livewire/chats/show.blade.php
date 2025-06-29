@@ -61,8 +61,10 @@
             @endif
         @endforeach
 
-        @can('update', $chat)
-            @include('livewire.chats.show.message-input')
-        @endcan
+        @auth
+            @can('update', $chat)
+                @include('livewire.chats.show.message-input')
+            @endcan
+        @endauth
     </div>
 </div>
