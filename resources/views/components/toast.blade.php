@@ -1,7 +1,7 @@
 {{--
     This component is inspired by
     https://devdojo.com/pines and styled
-    in a way that looks consitent with FluxUI
+    in a way that looks consistent with FluxUI
 --}}
 
 @props([
@@ -34,7 +34,6 @@
                 dismissible: true,
                 duration: 5000,
             }
-            console.log(options)
             const toast = { ...defaults, ...options }
             this.toasts.push(toast)
             return id
