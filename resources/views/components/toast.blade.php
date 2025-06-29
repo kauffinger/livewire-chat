@@ -9,7 +9,6 @@
         'top-right' => 'top-0 right-0 items-end',
         'bottom-left' => 'bottom-0 left-0 items-start',
         'bottom-center' => 'bottom-0 left-1/2 -translate-x-1/2 items-center',
-        'bottom-right' => 'right-0 bottom-0 items-end',
         default => 'right-0 bottom-0 items-end',
     };
 @endphp
@@ -74,19 +73,8 @@
             })
         },
         getVariantClasses(variant) {
-            switch (variant) {
-                case 'success':
-                    return 'bg-green-50 dark:bg-green-500/10 text-green-800 dark:text-green-400'
-                case 'error':
-                case 'danger':
-                    return 'bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-400'
-                case 'warning':
-                    return 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-800 dark:text-yellow-400'
-                case 'info':
-                    return 'bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-400'
-                default:
-                    return 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-            }
+            // Use typical FluxUI neutral styling for all variants
+            return 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700'
         },
         getIconColorClasses(variant) {
             switch (variant) {
@@ -148,7 +136,7 @@
                 x-transition:leave-end="scale-90 transform opacity-0"
                 @mouseenter="pauseTimer()"
                 @mouseleave="resumeTimer()"
-                :class="'pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-white/10 ' + getVariantClasses(toast.variant)"
+                :class="'pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg shadow-sm ' + getVariantClasses(toast.variant)"
                 role="alert"
             >
                 <div class="p-4">
@@ -169,7 +157,7 @@
                                 </template>
                             </div>
                         </template>
-                        <div class="ml-3 w-0 flex-1 pt-0.5" :class="{ 'ml-0': !toast.icon }">
+                        <div class="ml-3 w-0 flex-1" :class="{ 'ml-0': !toast.icon }">
                             <template x-if="toast.title">
                                 <p class="text-sm font-medium" x-text="toast.title"></p>
                             </template>
