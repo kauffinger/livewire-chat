@@ -116,6 +116,13 @@ class Show extends Component
         ]);
 
         Flux::modal('confirm-share')->close();
+        $this->dispatch('toast',
+            variant: 'success',
+            title: 'Success',
+            description: 'Chat is public.',
+            icon: 'check-circle',
+            duration: 3000
+        );
     }
 
     public function unshare(): void
@@ -127,6 +134,13 @@ class Show extends Component
         ]);
 
         Flux::modal('confirm-unshare')->close();
+        $this->dispatch('toast',
+            variant: 'success',
+            title: 'Success',
+            description: 'Chat is private.',
+            icon: 'check-circle',
+            duration: 3000
+        );
     }
 
     public function setModel(string $value): void
