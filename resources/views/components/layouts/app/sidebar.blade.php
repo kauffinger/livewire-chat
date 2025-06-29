@@ -172,6 +172,7 @@
 
         {{ $slot }}
 
+        <x-toast.toast-container position="bottom-right" />
         @livewireScriptConfig
         @fluxScripts
     </body>
