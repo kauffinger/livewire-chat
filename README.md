@@ -152,7 +152,7 @@ The chat kit includes a built-in toast notification system for user feedback.
 Add the toast container to your layout (e.g., in `resources/views/layouts/app.blade.php`):
 
 ```blade
-<x-toast.toast-container position="bottom-right" />
+<x-toast position="bottom-right" />
 ```
 
 ### Usage in Livewire Components
