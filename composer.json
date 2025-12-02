@@ -19,7 +19,7 @@
         "livewire/flux": "^2.2.1",
         "livewire/livewire": "^3.7",
         "livewire/volt": "^1.7.0",
-        "prism-php/prism": "^0.78.0",
+        "prism-php/prism": "^0.98.5",
         "symfony/http-foundation": "^7.4.0"
     },
     "require-dev": {

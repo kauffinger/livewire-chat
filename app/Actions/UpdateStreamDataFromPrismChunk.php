@@ -3,48 +3,46 @@
 namespace App\Actions;
 
 use App\Dtos\StreamData;
-use Prism\Prism\Enums\ChunkType;
+use Prism\Prism\Streaming\Events\StreamEvent;
+use Prism\Prism\Streaming\Events\TextDeltaEvent;
+use Prism\Prism\Streaming\Events\ThinkingEvent;
+use Prism\Prism\Streaming\Events\ToolCallEvent;
+use Prism\Prism\Streaming\Events\ToolResultEvent;
 use Prism\Prism\Text\Chunk;
-use Prism\Prism\ValueObjects\Meta;
 
 class UpdateStreamDataFromPrismChunk
 {
-    public function handle(StreamData $streamData, Chunk $chunk): void
+    public function handle(StreamData $streamData, StreamEvent $event): void
     {
-        switch ($chunk->chunkType) {
-            case ChunkType::ToolCall:
+        switch ($event::class) {
+            case ToolCallEvent::class:
                 // Extract tool calls from the chunk's toolCalls array and add to accumulated data
-                foreach ($chunk->toolCalls as $toolCall) {
-                    $streamData->toolCalls[] = [
-                        'name' => $toolCall->name ?? 'unknown',
-                        'id' => $toolCall->id ?? null,
-                        'arguments' => $toolCall->arguments() ?? [],
-                        'reasoningId' => $toolCall->reasoningId ?? null,
-                        'resultId' => $toolCall->resultId ?? null,
-                        'reasoningSummary' => $toolCall->reasoningSummary ?? null,
-                    ];
-                }
+                $streamData->toolCalls[] = [
+                    'name' => $event->toolCall->name ?? 'unknown',
+                    'id' => $event->toolCall->id ?? null,
+                    'arguments' => $event->toolCall->arguments() ?? [],
+                    'reasoningId' => $event->reasoningId ?? null,
+                    'resultId' => $event->resultId ?? null,
+                    'reasoningSummary' => $event->reasoningSummary ?? null,
+                ];
                 break;
-            case ChunkType::ToolResult:
-                // Extract tool results from the chunk's toolResults array and add to accumulated data
-                foreach ($chunk->toolResults as $toolResult) {
-                    $toolResultData = [
-                        'result' => $toolResult->result ?? '',
-                        'toolName' => $toolResult->toolName ?? 'unknown',
-                        'toolCallId' => $toolResult->toolCallId ?? null,
-                        'args' => $toolResult->args ?? [],
-                        'toolCallResultId' => $toolResult->toolCallResultId ?? null,
-                    ];
-                    $streamData->toolResults[] = $toolResultData;
-                }
+            case ToolResultEvent::class:
+                $streamData->toolResults[] = [
+                    'result' => $event->toolResult->result ?? '',
+                    'toolName' => $event->toolResult->toolName ?? 'unknown',
+                    'toolCallId' => $event->toolResult->toolCallId ?? null,
+                    'args' => $event->toolResult->args ?? [],
+                    'toolCallResultId' => $event->toolResult->toolCallResultId ?? null,
+                ];
                 break;
-            case ChunkType::Meta:
-                if ($chunk->meta instanceof Meta) {
-                    $streamData->meta[] = $chunk->meta;
-                }
+
+            case TextDeltaEvent::class:
+                $streamData->text .= $event->delta;
                 break;
-            default:
-                $streamData->{$chunk->chunkType->value} .= $chunk->text;
+
+            case ThinkingEvent::class:
+                $streamData->thinking .= $event->delta;
+                break;
         }
     }
 }

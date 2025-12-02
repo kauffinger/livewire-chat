@@ -14,8 +14,8 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\Facades\Prism;
 use Prism\Prism\Facades\Tool;
-use Prism\Prism\Prism;
 use Prism\Prism\Text\PendingRequest;
 
 class Show extends Component
@@ -84,20 +84,20 @@ class Show extends Component
                 'gpt-4',
                 'gpt-4.1-nano-2025-04-14' => $request,
                 default => $request->withProviderOptions([
-                    'reasoning' => ['effort' => 'low', 'summary' => 'detailed'],
+                    'reasoning' => ['effort' => 'medium', 'summary' => 'auto'],
                 ]),
             })
             ->asStream();
 
         $streamData = new StreamData;
 
-        foreach ($generator as $chunk) {
+        foreach ($generator as $event) {
 
-            $updateStreamDataFromPrismChunk->handle($streamData, $chunk);
+            $updateStreamDataFromPrismChunk->handle($streamData, $event);
 
             $this->stream(
                 'streamed-message',
-                json_encode([...$streamData->toArray(), 'currentChunkType' => $chunk->chunkType->value]),
+                json_encode([...$streamData->toArray(), 'currentChunkType' => $event->type()->value]),
                 true
             );
         }

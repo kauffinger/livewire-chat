@@ -12,6 +12,7 @@ enum OpenAiModel: string
     case o3Mini = 'o3-mini-2025-01-31';
     case o4Mini = 'o4-mini-2025-04-16';
     case Gpt41nano = 'gpt-4.1-nano-2025-04-14';
+    case Gpt51 = 'gpt-5.1-2025-11-13';
 
     /**
      * Get the values of the enum.
@@ -29,6 +30,7 @@ enum OpenAiModel: string
             self::o3Mini->value => 'o3-mini-2025-01-31',
             self::o4Mini->value => 'o4-mini-2025-04-16',
             self::Gpt41nano->value => 'gpt-4.1-nano-2025-04-14',
+            self::Gpt51->value => 'gpt-5.1-2025-11-13',
         ];
     }
 }
