@@ -5,8 +5,8 @@
 
     $scrollIntoViewJsSnippet = ($scrollTo !== false)
         ? <<<JS
-           (\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()
-        JS
+               (\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()
+            JS
         : '';
 @endphp
 
