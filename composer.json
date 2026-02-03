@@ -18,7 +18,7 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.11.1",
         "livewire/livewire": "^4.1.2",
-        "prism-php/prism": "^0.98.5",
+        "prism-php/prism": "^0.99.19",
         "symfony/http-foundation": "^7.4.0"
     },
     "require-dev": {
