@@ -96,9 +96,9 @@ class Show extends Component
             $updateStreamDataFromPrismChunk->handle($streamData, $event);
 
             $this->stream(
-                'streamed-message',
                 json_encode([...$streamData->toArray(), 'currentChunkType' => $event->type()->value]),
-                true
+                true,
+                to: 'streamed-message',
             );
         }
 
@@ -116,7 +116,8 @@ class Show extends Component
         ]);
 
         Flux::modal('confirm-share')->close();
-        $this->dispatch('toast',
+        $this->dispatch(
+            'toast',
             variant: 'success',
             title: 'Success',
             description: 'Chat is public.',
@@ -134,7 +135,8 @@ class Show extends Component
         ]);
 
         Flux::modal('confirm-unshare')->close();
-        $this->dispatch('toast',
+        $this->dispatch(
+            'toast',
             variant: 'success',
             title: 'Success',
             description: 'Chat is private.',
