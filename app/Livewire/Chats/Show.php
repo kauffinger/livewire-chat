@@ -2,16 +2,13 @@
 
 namespace App\Livewire\Chats;
 
+use App\Actions\UpdateStreamDataFromAiEvent;
 use App\Ai\Agents\ChatAgent;
 use App\Models\AgentConversation;
 use App\Models\AgentConversationMessage;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Laravel\Ai\Streaming\Events\ReasoningDelta;
-use Laravel\Ai\Streaming\Events\TextDelta;
-use Laravel\Ai\Streaming\Events\ToolCall;
-use Laravel\Ai\Streaming\Events\ToolResult;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -61,40 +58,18 @@ class Show extends Component
         /** @var User $user */
         $user = Auth::user();
 
-        $text = '';
-        $thinking = '';
-        $toolCalls = [];
-        $toolResults = [];
+        $streamDataUpdater = app(UpdateStreamDataFromAiEvent::class);
+        $streamData = $streamDataUpdater->initial();
 
         $stream = ChatAgent::make()
             ->continue($this->conversation->id, as: $user)
             ->stream($this->newMessage);
 
         foreach ($stream as $event) {
-            if ($event instanceof TextDelta) {
-                $text .= $event->delta;
-            } elseif ($event instanceof ReasoningDelta) {
-                $thinking .= $event->delta;
-            } elseif ($event instanceof ToolCall) {
-                $toolCalls[] = [
-                    'name' => $event->name,
-                    'arguments' => $event->arguments,
-                ];
-            } elseif ($event instanceof ToolResult) {
-                $toolResults[] = [
-                    'name' => $event->name,
-                    'result' => $event->result,
-                ];
-            }
+            $streamData = $streamDataUpdater->handle($streamData, $event);
 
             $this->stream(
-                json_encode([
-                    'text' => $text,
-                    'thinking' => $thinking,
-                    'toolCalls' => $toolCalls,
-                    'toolResults' => $toolResults,
-                    'currentChunkType' => $event->type(),
-                ]),
+                json_encode($streamData),
                 true,
                 to: 'streamed-message',
             );
