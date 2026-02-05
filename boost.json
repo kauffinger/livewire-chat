@@ -7,7 +7,8 @@
     "herd_mcp": true,
     "mcp": true,
     "packages": [
-        "prism-php/prism"
+        "prism-php/prism",
+        "laravel/ai"
     ],
     "sail": false,
     "skills": [
@@ -15,6 +16,7 @@
         "livewire-development",
         "pest-testing",
         "tailwindcss-development",
+        "developing-with-ai-sdk",
         "developing-with-prism"
     ]
 }
