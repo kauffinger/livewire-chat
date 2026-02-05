@@ -2,48 +2,44 @@
     <div>
         <div class="mb-6 flex items-center justify-between">
             <flux:heading size="xl" level="1">
-                {{ __('All Chats') }}
+                {{ __('All Conversations') }}
             </flux:heading>
 
-            <flux:button wire:click="createNewChat" icon="plus" variant="primary">
-                {{ __('New Chat') }}
+            <flux:button wire:click="createNewConversation" icon="plus" variant="primary">
+                {{ __('New Conversation') }}
             </flux:button>
         </div>
 
-        @if ($chats->count() > 0)
+        @if ($conversations->count() > 0)
             <div class="space-y-4">
-                @foreach ($chats as $chat)
+                @foreach ($conversations as $conversation)
                     <x-card>
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <flux:heading size="lg" level="3" class="mb-2">
                                     <flux:link
-                                        :href="route('chat.show', $chat->id)"
+                                        :href="route('conversation.show', $conversation->id)"
                                         wire:navigate.hover
                                         class="hover:underline"
                                     >
-                                        {{ $chat->title }}
+                                        {{ $conversation->title }}
                                     </flux:link>
                                 </flux:heading>
 
                                 <div class="flex flex-wrap gap-4 text-sm text-zinc-500 dark:text-zinc-400">
                                     <span class="flex items-center">
                                         <flux:icon name="clock" class="mr-1 h-4 w-4" />
-                                        {{ $chat->created_at->diffForHumans() }}
+                                        {{ $conversation->created_at->diffForHumans() }}
                                     </span>
                                     <span class="flex items-center">
                                         <flux:icon name="arrow-path" class="mr-1 h-4 w-4" />
-                                        {{ $chat->updated_at->diffForHumans() }}
-                                    </span>
-                                    <span class="flex items-center">
-                                        <flux:icon name="chat-bubble-left" class="mr-1 h-4 w-4" />
-                                        {{ $chat->messages_count }}
+                                        {{ $conversation->updated_at->diffForHumans() }}
                                     </span>
                                 </div>
                             </div>
 
                             <flux:button
-                                :href="route('chat.show', $chat->id)"
+                                :href="route('conversation.show', $conversation->id)"
                                 wire:navigate.hover
                                 size="sm"
                                 variant="ghost"
@@ -57,19 +53,19 @@
             </div>
 
             <div class="mt-6">
-                {{ $chats->links() }}
+                {{ $conversations->links() }}
             </div>
         @else
             <div class="py-12 text-center">
                 <flux:icon name="chat-bubble-left" class="mx-auto mb-4 h-16 w-16 text-zinc-300 dark:text-zinc-600" />
                 <flux:heading size="lg" level="2" class="mb-2 text-zinc-500 dark:text-zinc-400">
-                    {{ __('No chats yet') }}
+                    {{ __('No conversations yet') }}
                 </flux:heading>
                 <flux:text class="mb-6 text-zinc-400 dark:text-zinc-500">
-                    {{ __('Start your first conversation by creating a new chat.') }}
+                    {{ __('Start your first conversation by creating a new one.') }}
                 </flux:text>
-                <flux:button wire:click="createNewChat" icon="plus" variant="primary">
-                    {{ __('Create Your First Chat') }}
+                <flux:button wire:click="createNewConversation" icon="plus" variant="primary">
+                    {{ __('Create Your First Conversation') }}
                 </flux:button>
             </div>
         @endif

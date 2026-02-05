@@ -2,45 +2,47 @@
 
 namespace App\Livewire;
 
+use App\Models\AgentConversation;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Dashboard extends Component
 {
     /**
-     * If the user has no chats, we show the create button. Otherwise we redirect.
+     * If the user has no conversations, we show the create button. Otherwise we redirect.
      */
     public bool $showCreate = false;
 
     public function mount(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
-        $latestChat = $user->chats()->latest()->first();
+        $latestConversation = $user->conversations()->latest()->first();
 
-        if ($latestChat) {
-            // Redirect to the latest chat.
-            $this->redirectRoute('chat.show', ['chat' => $latestChat->id], navigate: true);
+        if ($latestConversation) {
+            $this->redirectRoute('conversation.show', ['conversation' => $latestConversation->id], navigate: true);
 
             return;
         }
 
-        // No chats yet → display create button.
         $this->showCreate = true;
     }
 
-    public function createNewChat(): void
+    public function createNewConversation(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
-        $chat = $user->chats()->create([
+        $conversation = AgentConversation::create([
+            'id' => (string) Str::uuid7(),
+            'user_id' => $user->id,
             'title' => __('New chat'),
-            'model' => 'gpt-4o-mini',
         ]);
 
-        $this->redirectRoute('chat.show', ['chat' => $chat->id], navigate: true);
+        $this->redirectRoute('conversation.show', ['conversation' => $conversation->id], navigate: true);
     }
 
     public function render()

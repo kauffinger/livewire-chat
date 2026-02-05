@@ -1,7 +1,7 @@
 <?php
 
-use App\Livewire\Chats\Index as ChatsIndex;
-use App\Livewire\Chats\Show as ChatsShow;
+use App\Livewire\Chats\Index as ConversationsIndex;
+use App\Livewire\Chats\Show as ConversationsShow;
 use App\Livewire\Dashboard as DashboardComponent;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -15,7 +15,8 @@ Route::get('dashboard', DashboardComponent::class)
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function (): void {
-    Route::get('chats', ChatsIndex::class)->name('chats.index');
+    Route::get('conversations', ConversationsIndex::class)->name('conversations.index');
+    Route::get('conversations/{conversation}', ConversationsShow::class)->name('conversation.show');
 
     Route::redirect('settings', 'settings/profile');
 
@@ -23,7 +24,5 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 });
-
-Route::get('chats/{chat}', ChatsShow::class)->middleware('can:view,chat')->name('chat.show');
 
 require __DIR__.'/auth.php';
