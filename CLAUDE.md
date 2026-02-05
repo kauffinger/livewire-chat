@@ -71,8 +71,6 @@ npm run build
 - **JavaScript/CSS**: Prettier with Tailwind plugin
 - **Blade**: Prettier blade plugin for template formatting
 
-
-
 ===
 
 <laravel-boost-guidelines>
