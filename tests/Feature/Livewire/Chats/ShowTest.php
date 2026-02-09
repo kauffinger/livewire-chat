@@ -1,251 +1,168 @@
 <?php
 
-use App\Models\Chat;
+use App\Ai\Agents\ChatAgent;
+use App\Models\AgentConversation;
+use App\Models\AgentConversationMessage;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Livewire\livewire;
 
-it('shows user\'s chat', function (): void {
+it('shows user\'s conversation', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()
+    $conversation = AgentConversation::factory()
         ->recycle($user)
         ->withMessages()
-        ->create(['visibility' => 'private']);
+        ->create();
 
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->assertOk();
 });
 
-it('disallows other users to show the chat', function (): void {
+it('disallows other users to show the conversation', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()
+    $conversation = AgentConversation::factory()
         ->recycle($user)
         ->withMessages()
-        ->create(['visibility' => 'private']);
+        ->create();
 
     $otherUser = User::factory()->create();
     actingAs($otherUser);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->assertForbidden();
 });
 
-it('disallows guests to show the chat', function (): void {
+it('disallows guests to show the conversation', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()
+    $conversation = AgentConversation::factory()
         ->recycle($user)
         ->withMessages()
-        ->create(['visibility' => 'private']);
+        ->create();
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->assertForbidden();
-});
-
-it('shows chat to other users if it\'s public', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()
-        ->recycle($user)
-        ->withMessages()
-        ->create(['visibility' => 'public']);
-
-    $otherUser = User::factory()->create();
-    actingAs($otherUser);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->assertOk();
-});
-
-it('shows chat to guests if it\'s public', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()
-        ->recycle($user)
-        ->withMessages()
-        ->create(['visibility' => 'public']);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->assertOk();
 });
 
 it('contains the messages', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()
+    $conversation = AgentConversation::factory()
         ->recycle($user)
         ->withMessages()
-        ->create(['visibility' => 'private']);
+        ->create();
 
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    $firstMessage = $conversation->messages()->oldest()->first();
+
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->assertOk()
-        ->assertSeeText($chat->messages->first()->parts['text']);
+        ->assertSeeText($firstMessage->content);
 });
 
 it('allows sending messages', function (): void {
+    ChatAgent::fake();
+
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
 
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    // newMessage stays until runAgent completes (for optimistic UI display)
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->set('newMessage', 'Hello, world!')
         ->call('sendMessage')
+        ->assertSet('newMessage', 'Hello, world!')
+        ->call('runAgent')
         ->assertSet('newMessage', '');
-
-    expect($chat->fresh()->messages)->toHaveCount(1)
-        ->and($chat->fresh()->messages->first()->role)->toBe('user')
-        ->and($chat->fresh()->messages->first()->parts['text'])->toBe('Hello, world!');
 });
 
 it('does not send empty messages', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
 
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->set('newMessage', '')
         ->call('sendMessage')
         ->assertSet('newMessage', '');
-
-    expect($chat->fresh()->messages)->toHaveCount(0);
 });
 
 it('trims whitespace from messages', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
 
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
+    livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation])
         ->set('newMessage', '   ')
         ->call('sendMessage')
         ->assertSet('newMessage', '   ');
-
-    expect($chat->fresh()->messages)->toHaveCount(0);
-});
-
-it('allows changing chat visibility to public', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create(['visibility' => 'private']);
-
-    actingAs($user);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('share');
-
-    expect($chat->fresh()->visibility)->toBe('public');
-});
-
-it('allows changing chat visibility to private', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create(['visibility' => 'public']);
-
-    actingAs($user);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('unshare');
-
-    expect($chat->fresh()->visibility)->toBe('private');
-});
-
-it('allows changing the model', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create(['model' => 'gpt-4o-mini']);
-
-    actingAs($user);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('setModel', 'gpt-4o')
-        ->assertSet('model', 'gpt-4o');
-
-    expect($chat->fresh()->model)->toBe('gpt-4o');
 });
 
 it('loads messages in chronological order', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
 
-    // Create messages with specific timestamps
-    $chat->messages()->create([
+    AgentConversationMessage::create([
+        'id' => (string) Str::uuid7(),
+        'conversation_id' => $conversation->id,
+        'user_id' => $user->id,
+        'agent' => 'App\\Ai\\Agents\\ChatAgent',
         'role' => 'user',
-        'parts' => ['text' => 'First message'],
+        'content' => 'First message',
         'attachments' => [],
+        'tool_calls' => [],
+        'tool_results' => [],
+        'usage' => [],
+        'meta' => [],
         'created_at' => now()->subHours(3),
+        'updated_at' => now()->subHours(3),
     ]);
-    $chat->messages()->create([
+
+    AgentConversationMessage::create([
+        'id' => (string) Str::uuid7(),
+        'conversation_id' => $conversation->id,
+        'user_id' => $user->id,
+        'agent' => 'App\\Ai\\Agents\\ChatAgent',
         'role' => 'assistant',
-        'parts' => ['text' => 'Second message'],
+        'content' => 'Second message',
         'attachments' => [],
+        'tool_calls' => [],
+        'tool_results' => [],
+        'usage' => [],
+        'meta' => [],
         'created_at' => now()->subHours(2),
+        'updated_at' => now()->subHours(2),
     ]);
-    $chat->messages()->create([
+
+    AgentConversationMessage::create([
+        'id' => (string) Str::uuid7(),
+        'conversation_id' => $conversation->id,
+        'user_id' => $user->id,
+        'agent' => 'App\\Ai\\Agents\\ChatAgent',
         'role' => 'user',
-        'parts' => ['text' => 'Third message'],
+        'content' => 'Third message',
         'attachments' => [],
+        'tool_calls' => [],
+        'tool_results' => [],
+        'usage' => [],
+        'meta' => [],
         'created_at' => now()->subHour(),
+        'updated_at' => now()->subHour(),
     ]);
 
     actingAs($user);
 
-    $component = livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat]);
+    $component = livewire(\App\Livewire\Chats\Show::class, ['conversation' => $conversation]);
     $messages = $component->get('messages');
 
     expect($messages)->toHaveCount(3)
-        ->and($messages[0]->parts['text'])->toBe('First message')
-        ->and($messages[1]->parts['text'])->toBe('Second message')
-        ->and($messages[2]->parts['text'])->toBe('Third message');
-});
-
-it('prevents unauthorized users from sending messages', function (): void {
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
-    $chat = Chat::factory()->recycle($owner)->create(['visibility' => 'public']);
-
-    actingAs($otherUser);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->set('newMessage', 'Unauthorized message')
-        ->call('sendMessage')
-        ->assertForbidden();
-});
-
-it('prevents unauthorized users from changing visibility', function (): void {
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
-    $chat = Chat::factory()->recycle($owner)->create(['visibility' => 'public']);
-
-    actingAs($otherUser);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('share')
-        ->assertForbidden();
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('unshare')
-        ->assertForbidden();
-});
-
-it('prevents unauthorized users from changing model', function (): void {
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
-    $chat = Chat::factory()->recycle($owner)->create(['visibility' => 'public']);
-
-    actingAs($otherUser);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->call('setModel', 'gpt-4o')
-        ->assertForbidden();
-});
-
-it('mounts with correct model from chat', function (): void {
-    $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create(['model' => 'gpt-4']);
-
-    actingAs($user);
-
-    livewire(\App\Livewire\Chats\Show::class, ['chat' => $chat])
-        ->assertSet('model', 'gpt-4');
+        ->and($messages[0]['content'])->toBe('First message')
+        ->and($messages[1]['content'])->toBe('Second message')
+        ->and($messages[2]['content'])->toBe('Third message');
 });

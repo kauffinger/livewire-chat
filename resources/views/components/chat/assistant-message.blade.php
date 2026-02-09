@@ -9,6 +9,17 @@
     'thinkingProseSize' => 'prose-sm',
 ])
 
+@php
+    $content = '';
+    if ($message) {
+        if (is_array($message)) {
+            $content = $message['content'] ?? '';
+        } elseif (is_object($message)) {
+            $content = $message->content ?? ($message->parts['text'] ?? '');
+        }
+    }
+@endphp
+
 <div class="@if ($isFirst) flex-1 @endif flex w-full flex-row justify-start">
     <div
         class="prose prose-sm max-h-fit max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
@@ -59,7 +70,7 @@
 
         <!-- Tool calls display -->
         <div x-show="hasToolCalls()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-            <template x-for="toolCall in streamData.toolCalls" :key="toolCall.toolCallResultId">
+            <template x-for="toolCall in streamData.toolCalls" :key="toolCall.id">
                 <div class="mt-1 flex items-center gap-2 text-xs">
                     <flux:icon.wrench-screwdriver class="h-3 w-3 text-blue-500" />
                     <span x-text="toolCall.name" class="font-mono text-blue-600 dark:text-blue-400"></span>
@@ -79,7 +90,7 @@
                     wire:replace
                 @endif
             >
-                {{ $isLoading ? '' : json_encode($message->parts) }}
+                {{ $isLoading ? '' : json_encode(['text' => $content]) }}
             </span>
             <article
                 wire:ignore

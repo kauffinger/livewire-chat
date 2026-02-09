@@ -13,13 +13,13 @@
             <div class="space-y-2">
                 <template
                     x-for="result in toolResults"
-                    :key="result.toolCallId + (result.toolCallResultId || Date.now())"
+                    :key="result.id + (result.resultId || '')"
                 >
                     <div class="border-b border-green-200 pb-2 last:border-b-0 dark:border-green-600">
                         <div class="mb-1 flex items-center gap-2">
                             <flux:icon.check-circle class="h-4 w-4 text-green-600 dark:text-green-400" />
                             <span
-                                x-text="result.toolName"
+                                x-text="result.name"
                                 class="font-mono text-sm font-medium text-green-700 dark:text-green-300"
                             ></span>
                         </div>

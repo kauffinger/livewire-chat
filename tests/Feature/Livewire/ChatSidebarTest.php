@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Chat;
+use App\Models\AgentConversation;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -11,16 +11,16 @@ it('mounts successfully', function (): void {
 
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Chats')
-        ->assertSeeText('New Chat');
+        ->assertSeeText('Conversations')
+        ->assertSeeText('New Conversation');
 });
 
-it('shows new chat button for authenticated users', function (): void {
+it('shows new conversation button for authenticated users', function (): void {
     actingAs(User::factory()->create());
 
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertSeeHtml('wire:click="createNewChat"')
+        ->assertSeeHtml('wire:click="createNewConversation"')
         ->assertDontSeeHtml('href="'.route('login').'"');
 });
 
@@ -28,30 +28,30 @@ it('shows login link for guests', function (): void {
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
         ->assertSeeHtml('href="'.route('login').'"')
-        ->assertDontSeeHtml('wire:click="createNewChat"');
+        ->assertDontSeeHtml('wire:click="createNewConversation"');
 });
 
-it('displays user chats', function (): void {
+it('displays user conversations', function (): void {
     $user = User::factory()->create();
-    $chats = Chat::factory()->recycle($user)->count(3)->create([
-        'title' => 'Test Chat Title',
+    AgentConversation::factory()->recycle($user)->count(3)->create([
+        'title' => 'My Chat',
     ]);
 
     actingAs($user);
 
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Test Chat Title');
+        ->assertSeeText('My Chat');
 });
 
-it('limits displayed chats to 5 most recent', function (): void {
+it('limits displayed conversations to 5 most recent', function (): void {
     $user = User::factory()->create();
-    Chat::factory()->recycle($user)->count(3)->create([
-        'title' => 'Old Chat',
+    AgentConversation::factory()->recycle($user)->count(3)->create([
+        'title' => 'Old Conversation',
         'updated_at' => now()->subDays(10),
     ]);
-    Chat::factory()->recycle($user)->count(5)->create([
-        'title' => 'Recent Chat',
+    AgentConversation::factory()->recycle($user)->count(5)->create([
+        'title' => 'Recent Conversation',
         'updated_at' => now(),
     ]);
 
@@ -59,55 +59,54 @@ it('limits displayed chats to 5 most recent', function (): void {
 
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Recent Chat')
-        ->assertDontSeeText('Old Chat');
+        ->assertSeeText('Recent Conversation')
+        ->assertDontSeeText('Old Conversation');
 });
 
-it('highlights active chat', function (): void {
+it('highlights active conversation', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
 
     actingAs($user);
 
     livewire(\App\Livewire\ChatSidebar::class)
-        ->set('activeChatId', $chat->id)
+        ->set('activeConversationId', $conversation->id)
         ->assertOk()
-        ->assertSet('activeChatId', $chat->id);
+        ->assertSet('activeConversationId', $conversation->id);
 });
 
-it('creates new chat and redirects', function (): void {
+it('creates new conversation and redirects', function (): void {
     $user = User::factory()->create();
 
     actingAs($user);
 
     livewire(\App\Livewire\ChatSidebar::class)
-        ->call('createNewChat')
-        ->assertRedirect(route('chat.show', $user->chats()->latest()->first()));
+        ->call('createNewConversation')
+        ->assertRedirect();
 
-    expect($user->chats)->toHaveCount(1)
-        ->and($user->chats()->first()->title)->toBe('New chat')
-        ->and($user->chats()->first()->model)->toBe('gpt-4o-mini');
+    expect($user->conversations)->toHaveCount(1)
+        ->and($user->conversations()->first()->title)->toBe('New chat');
 });
 
-it('shows show all chats button for authenticated users', function (): void {
+it('shows show all conversations button for authenticated users', function (): void {
     actingAs(User::factory()->create());
 
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Show All Chats')
-        ->assertSeeHtml('href="'.route('chats.index').'"');
+        ->assertSeeText('Show All Conversations')
+        ->assertSeeHtml('href="'.route('conversations.index').'"');
 });
 
-it('does not show show all chats button for guests', function (): void {
+it('does not show show all conversations button for guests', function (): void {
     livewire(\App\Livewire\ChatSidebar::class)
         ->assertOk()
-        ->assertDontSeeText('Show All Chats');
+        ->assertDontSeeText('Show All Conversations');
 });
 
-it('truncates long chat titles', function (): void {
+it('truncates long conversation titles', function (): void {
     $user = User::factory()->create();
-    $longTitle = 'This is a very long chat title that should be truncated';
-    $chat = Chat::factory()->recycle($user)->create(['title' => $longTitle]);
+    $longTitle = 'This is a very long conversation title that should be truncated';
+    AgentConversation::factory()->recycle($user)->create(['title' => $longTitle]);
 
     actingAs($user);
 

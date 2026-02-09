@@ -24,8 +24,8 @@ use Illuminate\Support\Str;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Collection<int, Chat> $chats
- * @property-read int|null $chats_count
+ * @property-read Collection<int, AgentConversation> $conversations
+ * @property-read int|null $conversations_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  *
@@ -57,13 +57,13 @@ final class User extends Authenticatable
     ];
 
     /**
-     * Get the user that the OAuth connection belongs to.
+     * Get the user's agent conversations.
      *
-     * @return HasMany<Chat, covariant $this>
+     * @return HasMany<AgentConversation, covariant $this>
      */
-    public function chats(): HasMany
+    public function conversations(): HasMany
     {
-        return $this->hasMany(Chat::class);
+        return $this->hasMany(AgentConversation::class);
     }
 
     /**

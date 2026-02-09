@@ -2,7 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\Chat as ChatModel;
+use App\Models\AgentConversation;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -11,36 +12,40 @@ use Livewire\Component;
 
 class ChatSidebar extends Component
 {
-    public ?string $activeChatId = null;
+    public ?string $activeConversationId = null;
 
     public function mount(): void
     {
-        $this->activeChatId = request()->route('chat')?->id;
+        $this->activeConversationId = request()->route('conversation')?->id;
     }
 
     #[Computed]
-    public function chats(): array
+    public function conversations(): array
     {
         return Auth::user()
-            ?->chats()
+            ?->conversations()
             ->latest('updated_at')
             ->limit(5)
             ->get()
-            ->map(fn (ChatModel $chat) => [
-                'id' => $chat->id,
-                'title' => (string) Str::limit($chat->title, 20),
+            ->map(fn (AgentConversation $conversation) => [
+                'id' => $conversation->id,
+                'title' => (string) Str::limit($conversation->title, 20),
             ])
             ->all() ?? [];
     }
 
-    public function createNewChat(): void
+    public function createNewConversation(): void
     {
-        $chat = Auth::user()->chats()->create([
+        /** @var User $user */
+        $user = Auth::user();
+
+        $conversation = AgentConversation::create([
+            'id' => (string) Str::uuid7(),
+            'user_id' => $user->id,
             'title' => __('New chat'),
-            'model' => 'gpt-4o-mini',
         ]);
 
-        $this->redirect(route('chat.show', $chat), navigate: true);
+        $this->redirect(route('conversation.show', $conversation), navigate: true);
     }
 
     public function render(): View

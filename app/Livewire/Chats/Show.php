@@ -2,158 +2,81 @@
 
 namespace App\Livewire\Chats;
 
-use App\Actions\AddNewUserMessageToChat;
-use App\Actions\PersistStreamDataToMessages;
-use App\Actions\UpdateStreamDataFromPrismChunk;
-use App\Dtos\StreamData;
-use App\Enums\Visibility;
-use App\Models\Chat as ChatModel;
-use Flux\Flux;
-use Illuminate\Support\Facades\Gate;
+use App\Actions\UpdateStreamDataFromAiEvent;
+use App\Ai\Agents\ChatAgent;
+use App\Models\AgentConversation;
+use App\Models\AgentConversationMessage;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Facades\Prism;
-use Prism\Prism\Facades\Tool;
-use Prism\Prism\Text\PendingRequest;
 
 class Show extends Component
 {
-    public ChatModel $chat;
+    #[Locked]
+    public AgentConversation $conversation;
 
     public string $newMessage = '';
 
-    public string $model = 'gpt-4o-mini';
-
-    public function mount(ChatModel $chat): void
+    public function mount(AgentConversation $conversation): void
     {
-        Gate::authorize('view', $chat);
+        /** @var User|null $user */
+        $user = Auth::user();
 
-        $this->chat = $chat;
+        abort_unless($user && $conversation->user_id === $user->id, 403);
 
-        $this->model = $this->chat->model ?? 'gpt-4o-mini';
+        $this->conversation = $conversation;
     }
 
     #[Computed]
     public function messages(): array
     {
-        return $this->chat->messages()->oldest()
+        return $this->conversation
+            ->messages()
+            ->oldest()
             ->get()
+            ->map(fn (AgentConversationMessage $message) => [
+                'role' => $message->role,
+                'content' => $message->content,
+            ])
             ->all();
     }
 
-    public function sendMessage(AddNewUserMessageToChat $addNewUserMessageToChat): void
+    public function sendMessage(): void
     {
-        Gate::authorize('update', $this->chat);
-
-        $userMessage = trim($this->newMessage);
-
-        if ($userMessage === '') {
+        if (trim($this->newMessage) === '') {
             return;
         }
 
-        $addNewUserMessageToChat->handle($this->chat, $userMessage);
-
-        $this->newMessage = '';
-
-        $this->js('$wire.runChatToolLoop()');
+        $this->js('$wire.runAgent()');
     }
 
-    public function runChatToolLoop(
-        PersistStreamDataToMessages $persistStreamDataToMessages,
-        UpdateStreamDataFromPrismChunk $updateStreamDataFromPrismChunk,
-    ): void {
-        Gate::authorize('update', $this->chat);
+    public function runAgent(): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
 
-        $generator = Prism::text()
-            ->using(Provider::OpenAI, $this->model)
-            ->withSystemPrompt('You are a helpful assistant.')
-            ->withMessages(collect($this->messages)->map->toPrism()->all())
-            ->withMaxSteps(5)
-            ->withTools([
-                Tool::as('sum')->withNumberParameter('a', 'The first number to sum')
-                    ->withNumberParameter('b', 'The second number to sum')
-                    ->for('Sums two numbers together')
-                    ->using(fn ($a, $b) => (string) ($a + $b)),
-            ])
-            ->whenProvider(Provider::OpenAI, fn (PendingRequest $request) => match ($this->model) {
-                'gpt-4o',
-                'gpt-4o-mini',
-                'gpt-3.5-turbo',
-                'gpt-4',
-                'gpt-4.1-nano-2025-04-14' => $request,
-                default => $request->withProviderOptions([
-                    'reasoning' => ['effort' => 'medium', 'summary' => 'auto'],
-                ]),
-            })
-            ->asStream();
+        $streamDataUpdater = app(UpdateStreamDataFromAiEvent::class);
+        $streamData = $streamDataUpdater->initial();
 
-        $streamData = new StreamData;
+        $stream = ChatAgent::make()
+            ->continue($this->conversation->id, as: $user)
+            ->stream($this->newMessage);
 
-        foreach ($generator as $event) {
-
-            $updateStreamDataFromPrismChunk->handle($streamData, $event);
+        foreach ($stream as $event) {
+            $streamData = $streamDataUpdater->handle($streamData, $event);
 
             $this->stream(
-                json_encode([...$streamData->toArray(), 'currentChunkType' => $event->type()->value]),
+                json_encode($streamData),
                 true,
                 to: 'streamed-message',
             );
         }
 
-        $persistStreamDataToMessages->handle($this->chat, $streamData);
-
+        $this->newMessage = '';
         unset($this->messages);
-    }
-
-    public function share(): void
-    {
-        Gate::authorize('update', $this->chat);
-
-        $this->chat->update([
-            'visibility' => Visibility::Public->value,
-        ]);
-
-        Flux::modal('confirm-share')->close();
-        $this->dispatch(
-            'toast',
-            variant: 'success',
-            title: 'Success',
-            description: 'Chat is public.',
-            icon: 'check-circle',
-            duration: 3000
-        );
-    }
-
-    public function unshare(): void
-    {
-        Gate::authorize('update', $this->chat);
-
-        $this->chat->update([
-            'visibility' => Visibility::Private->value,
-        ]);
-
-        Flux::modal('confirm-unshare')->close();
-        $this->dispatch(
-            'toast',
-            variant: 'success',
-            title: 'Success',
-            description: 'Chat is private.',
-            icon: 'check-circle',
-            duration: 3000
-        );
-    }
-
-    public function setModel(string $value): void
-    {
-        Gate::authorize('update', $this->chat);
-
-        $this->model = $value;
-
-        $this->chat->update([
-            'model' => $value,
-        ]);
     }
 
     public function render(): View

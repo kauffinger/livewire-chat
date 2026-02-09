@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Chats;
 
+use App\Models\AgentConversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,17 +14,18 @@ class Index extends Component
 {
     use WithPagination;
 
-    public function createNewChat(): void
+    public function createNewConversation(): void
     {
         /** @var User $user */
         $user = Auth::user();
 
-        $chat = $user->chats()->create([
+        $conversation = AgentConversation::create([
+            'id' => (string) Str::uuid7(),
+            'user_id' => $user->id,
             'title' => __('New chat'),
-            'model' => 'gpt-4o-mini',
         ]);
 
-        $this->redirectRoute('chat.show', ['chat' => $chat->id], navigate: true);
+        $this->redirectRoute('conversation.show', ['conversation' => $conversation->id], navigate: true);
     }
 
     public function render(): View
@@ -30,13 +33,12 @@ class Index extends Component
         /** @var User $user */
         $user = Auth::user();
 
-        $chats = $user->chats()
-            ->withCount('messages')
+        $conversations = $user->conversations()
             ->latest('updated_at')
             ->paginate(10);
 
         return view('livewire.chats.index', [
-            'chats' => $chats,
+            'conversations' => $conversations,
         ]);
     }
 }

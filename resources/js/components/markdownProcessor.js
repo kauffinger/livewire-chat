@@ -123,7 +123,7 @@ export default function markdownProcessor() {
         },
 
         isCurrentlyThinking() {
-            return this.streamData.currentChunkType === 'thinking_delta';
+            return this.streamData.currentChunkType === 'reasoning_delta';
         },
 
         isCurrentlyUsingTools() {

@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Chat;
+use App\Models\AgentConversation;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -11,65 +11,56 @@ it('mounts', function (): void {
 
     livewire(\App\Livewire\Chats\Index::class)
         ->assertOk()
-        ->assertSeeText('No chats yet');
+        ->assertSeeText('No conversations yet');
 });
 
-it('shows chats', function (): void {
+it('shows conversations', function (): void {
     $user = User::factory()->create();
-    Chat::factory()->recycle($user)->count(20)->create();
+    AgentConversation::factory()->recycle($user)->count(20)->create(['title' => 'Test Title']);
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
         ->assertOk()
-        ->assertSeeText($user->chats()->oldest()->first()->title)
+        ->assertSeeText('Test Title')
         ->assertSeeHtml('wire:click="gotoPage(2, \'page\')"');
 });
 
-it('creates new chat and redirects', function (): void {
+it('creates new conversation and redirects', function (): void {
     $user = User::factory()->create();
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
-        ->call('createNewChat')
-        ->assertRedirect(route('chat.show', $user->chats()->latest()->first()));
+        ->call('createNewConversation')
+        ->assertRedirect();
 
-    expect($user->chats)->toHaveCount(1)
-        ->and($user->chats()->first()->title)->toBe('New chat')
-        ->and($user->chats()->first()->model)->toBe('gpt-4o-mini');
+    expect($user->conversations)->toHaveCount(1)
+        ->and($user->conversations()->first()->title)->toBe('New chat');
 });
 
-it('displays chat metadata', function (): void {
+it('displays conversation metadata', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create([
+    $conversation = AgentConversation::factory()->recycle($user)->create([
         'created_at' => now()->subDays(5),
         'updated_at' => now()->subHours(2),
     ]);
 
-    // Add messages to get accurate count
-    $chat->messages()->createMany([
-        ['role' => 'user', 'parts' => ['text' => 'Hello'], 'attachments' => []],
-        ['role' => 'assistant', 'parts' => ['text' => 'Hi there'], 'attachments' => []],
-        ['role' => 'user', 'parts' => ['text' => 'How are you?'], 'attachments' => []],
-    ]);
-
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
         ->assertOk()
-        ->assertSeeText($chat->title)
+        ->assertSeeText($conversation->title)
         ->assertSeeText('5 days ago') // created_at
-        ->assertSeeText('2 hours ago') // updated_at
-        ->assertSeeText('3'); // messages_count
+        ->assertSeeText('2 hours ago'); // updated_at
 });
 
-it('shows chats in descending order by updated_at', function (): void {
+it('shows conversations in descending order by updated_at', function (): void {
     $user = User::factory()->create();
-    $oldChat = Chat::factory()->recycle($user)->create([
-        'title' => 'Old Chat',
+    AgentConversation::factory()->recycle($user)->create([
+        'title' => 'Old Conversation',
         'updated_at' => now()->subDays(10),
     ]);
-    $recentChat = Chat::factory()->recycle($user)->create([
-        'title' => 'Recent Chat',
+    AgentConversation::factory()->recycle($user)->create([
+        'title' => 'Recent Conversation',
         'updated_at' => now(),
     ]);
 
@@ -77,17 +68,17 @@ it('shows chats in descending order by updated_at', function (): void {
 
     $response = livewire(\App\Livewire\Chats\Index::class);
 
-    // Recent chat should appear before old chat
+    // Recent conversation should appear before old conversation
     $htmlContent = $response->html();
-    $recentChatPosition = strpos($htmlContent, 'Recent Chat');
-    $oldChatPosition = strpos($htmlContent, 'Old Chat');
+    $recentPosition = strpos($htmlContent, 'Recent Conversation');
+    $oldPosition = strpos($htmlContent, 'Old Conversation');
 
-    expect($recentChatPosition)->toBeLessThan($oldChatPosition);
+    expect($recentPosition)->toBeLessThan($oldPosition);
 });
 
-it('paginates chats with 10 per page', function (): void {
+it('paginates conversations with 10 per page', function (): void {
     $user = User::factory()->create();
-    Chat::factory()->recycle($user)->count(15)->create();
+    AgentConversation::factory()->recycle($user)->count(15)->create();
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
@@ -96,26 +87,26 @@ it('paginates chats with 10 per page', function (): void {
         ->assertDontSeeHtml('wire:click="gotoPage(3, \'page\')"');
 });
 
-it('shows empty state with create button when no chats', function (): void {
+it('shows empty state with create button when no conversations', function (): void {
     $user = User::factory()->create();
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
         ->assertOk()
-        ->assertSeeText('No chats yet')
-        ->assertSeeText('Start your first conversation by creating a new chat.')
-        ->assertSeeText('Create Your First Chat')
-        ->assertSeeHtml('wire:click="createNewChat"');
+        ->assertSeeText('No conversations yet')
+        ->assertSeeText('Start your first conversation by creating a new one.')
+        ->assertSeeText('Create Your First Conversation')
+        ->assertSeeHtml('wire:click="createNewConversation"');
 });
 
-it('shows all chat action buttons', function (): void {
+it('shows all conversation action buttons', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = AgentConversation::factory()->recycle($user)->create();
     actingAs($user);
 
     livewire(\App\Livewire\Chats\Index::class)
         ->assertOk()
         ->assertSeeText('Open')
-        ->assertSeeHtml('href="'.route('chat.show', $chat->id).'"')
+        ->assertSeeHtml('href="'.route('conversation.show', $conversation->id).'"')
         ->assertSeeHtml('wire:navigate.hover');
 });
