@@ -13,5 +13,5 @@ it('sums two numbers', function (float|int $a, float|int $b, string $sum): void 
 ]);
 
 it('is available to the chat agent', function (): void {
-    expect((new ChatAgent)->tools())->toContainOnlyInstancesOf(Sum::class);
+    expect(collect((new ChatAgent)->tools())->whereInstanceOf(Sum::class))->toHaveCount(1);
 });

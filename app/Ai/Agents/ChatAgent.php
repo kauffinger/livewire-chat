@@ -3,6 +3,7 @@
 namespace App\Ai\Agents;
 
 use App\Ai\Tools\Sum;
+use App\Ai\Tools\UpdateProfileName;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -36,6 +37,7 @@ class ChatAgent implements Agent, Conversational, HasTools
     {
         return [
             new Sum,
+            new UpdateProfileName,
         ];
     }
 }
