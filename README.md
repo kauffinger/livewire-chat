@@ -5,7 +5,7 @@
 [![Linter Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/lint.yml?branch=main&label=linter&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Alint+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/kauffinger/livewire-chat-kit.svg?style=flat-square)](https://packagist.org/packages/kauffinger/livewire-chat-kit)
 
-A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and [Prism](https://github.com/prism-php/prism). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
+A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and the [Laravel AI SDK](https://laravel.com/docs/ai-sdk). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
 
 This starter kit provides a clean, simple foundation for creating chat applications. It's designed to get you sending your first chat messages to an LLM instantly.
 
@@ -13,18 +13,16 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 
 ### Chat System
 
-- **Multi-Chat Management:** Create, manage, and navigate between multiple chat conversations
-- **Chat Sidebar:** Quick access to recent chats with intelligent navigation
-- **Chat Sharing:** Share conversations publicly or keep them private with visibility controls
-- **Model Selection:** Choose from different LLM models (GPT-4o, GPT-4o-mini, etc.) per chat
-- **Persistent History:** All conversations are saved and accessible across sessions
+- **Multi-Conversation Management:** Create, manage, and navigate between multiple conversations
+- **Chat Sidebar:** Quick access to your most recent conversations
+- **Persistent History:** Conversations are stored by the AI SDK and accessible across sessions
 
 ### LLM Integration
 
 - **Livewire-Powered:** Build dynamic interfaces with PHP.
 - **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
-- **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
-- **Tool Support:** Built-in LLM tool calling with visual feedback and result display
+- **Laravel AI SDK:** The first-party way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
+- **Tool Support:** Built-in LLM tool calling with visual feedback
 
 ### UI & Design
 
@@ -51,32 +49,26 @@ After installation, make sure to:
 
 ### 1. Configure LLM Provider
 
-This starter kit uses [Prism](https://github.com/prism-php/prism) to interact with LLMs. By default, it's configured to use OpenAI's `gpt-4o-mini`. You'll need to add your API key to your `.env` file.
+This starter kit uses the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) to interact with LLMs. By default, it's configured to use OpenAI. You'll need to add your API key to your `.env` file.
 
 ```env
 OPENAI_API_KEY=your-openai-api-key
-# OPENAI_ORGANIZATION_ID= (optional)
 ```
 
-You can easily switch to other providers supported by Prism (like Anthropic) by modifying the `Chat.php` component. For example, to use Claude:
+The default provider is set in `config/ai.php`. You can switch the chat to another provider or model with attributes on the agent. For example, to use Claude:
 
 ```php
-// In app/Livewire/Chat.php
-// ...
-use Prism\Prism\Enums\Provider;
+// In app/Ai/Agents/ChatAgent.php
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Enums\Lab;
 
-// ...
-    public function runChatToolLoop(): void
-    {
-        $generator = Prism::text()
-            ->using(Provider::Anthropic, 'claude-3-opus-20240229') // Example for Claude
-            // ->using(Provider::OpenAI, 'gpt-4o-mini') // Default
-            ->withSystemPrompt('You are a helpful assistant.')
-            ->withMessages(collect($this->messages)->map->toPrism()->all())
-            ->asStream();
-        // ...
-    }
-// ...
+#[Provider(Lab::Anthropic)]
+#[Model('claude-sonnet-5')]
+class ChatAgent implements Agent, Conversational, HasTools
+{
+    // ...
+}
 ```
 
 Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_API_KEY`).
@@ -85,37 +77,27 @@ Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_
 
 Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:
 
-- Create new chats from the sidebar
+- Create new conversations from the sidebar
 - Switch between existing conversations
-- Share chats publicly or keep them private
-- Change the LLM model for each chat
 - Use built-in tools (like the example sum calculator)
 
 ## Architecture
 
 ### Core Components
 
-- **`app/Livewire/Chats/Index.php`** - Paginate over all of your chats
-- **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming, tool calls, and message management
-- **`app/Livewire/ChatSidebar.php`** - Chat navigation, history, and new chat creation
-- **`app/Models/Chat.php`** - Chat model with user relationships and visibility controls
-- **`app/Models/Message.php`** - Message model with tool call/result support and Prism integration
+- **`app/Ai/Agents/ChatAgent.php`** - The agent: instructions, tools, and conversation memory
+- **`app/Ai/Tools/Sum.php`** - Example tool the agent can call
+- **`app/Livewire/Chats/Index.php`** - Paginate over all of your conversations
+- **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
+- **`app/Livewire/ChatSidebar.php`** - Conversation navigation, history, and new conversation creation
+- **`app/Actions/UpdateStreamDataFromAiEvent.php`** - Folds the AI SDK's stream events into the data the UI renders
 
-### Business Logic Layer
-
-- **`app/Actions/`** - Clean action classes for complex operations:
-  - `AddNewUserMessageToChat` - Handles user message persistence
-  - `UpdateStreamDataFromPrismChunk` - Processes streaming LLM responses
-  - `PersistStreamDataToMessages` - Saves complete responses to database
-- **`app/Dtos/StreamData.php`** - Type-safe data transfer object for streaming
-- **`app/Policies/ChatPolicy.php`** - Authorization rules for chat access and sharing
+Conversations and messages are stored by the AI SDK. The kit uses the SDK's own `Laravel\Ai\Models\Conversation` and `Laravel\Ai\Models\ConversationMessage` models, and the `User` model uses the SDK's `HasConversations` trait.
 
 ### UI Components
 
 - **Chat Interface:** Real-time streaming with markdown rendering
-- **Tool Results Display:** Visual feedback for LLM tool executions
-- **Model Selector:** Per-chat model configuration
-- **Sharing Controls:** Public/private visibility management
+- **Tool Calls Display:** Visual feedback for LLM tool executions
 - **Toast Notifications:** Built-in toast system for user feedback
 
 ## How it Works
@@ -123,24 +105,22 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 ### Message Flow
 
 1. **User Input:** Message typed in chat interface and submitted
-2. **Message Processing:** `AddNewUserMessageToChat` action persists user message
-3. **LLM Streaming:** `runChatToolLoop()` initiates real-time streaming with Prism
-4. **Stream Handling:** `UpdateStreamDataFromPrismChunk` processes each chunk (text, tool calls, results)
+2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
+3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent` and streams the response
+4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
 5. **UI Updates:** Livewire streams update the interface in real-time
-6. **Persistence:** `PersistStreamDataToMessages` saves complete conversation
+6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
 
 ### Tool Integration
 
-- **Tool Definitions:** Tools are defined in the `runChatToolLoop()` method
+- **Tool Definitions:** Tools live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`. Create new ones with `php artisan make:tool`
 - **Automatic Execution:** LLM can call tools during conversation flow
-- **Visual Feedback:** Tool calls and results are displayed with dedicated UI components
+- **Visual Feedback:** Tool calls are displayed while streaming and in the conversation history
 
 ### Technical Implementation
 
-- **UUID Models:** All models use UUIDs for security and scalability
-- **Policy Authorization:** Fine-grained access control with `ChatPolicy`
-- **Type Safety:** DTOs and strong typing throughout the application
-- **Testing:** Comprehensive Pest test suite with Livewire integration
+- **Ownership Checks:** Conversations can only be opened by the user they belong to
+- **Testing:** Comprehensive Pest test suite with Livewire integration and faked agents
 - **Code Quality:** Laravel Pint, Rector, and Prettier for consistent formatting
 
 ## Toast Notifications
