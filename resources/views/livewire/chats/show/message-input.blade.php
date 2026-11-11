@@ -8,6 +8,8 @@
         stop: () => {},
         init() {
             $wire.$intercept('runAgent', ({ action }) => {
+                matchMedia('(pointer: fine)').matches && this.$refs.input.focus();
+
                 this.stop = () => {
                     action.cancel();
                     $wire.stopAgent();
@@ -18,7 +20,7 @@
     }"
 >
     <div
-        class="cursor-text rounded-3xl border border-zinc-200 bg-white shadow-sm transition focus-within:border-zinc-400 focus-within:shadow-md dark:border-white/10 dark:bg-zinc-700/50 dark:focus-within:border-white/30"
+        class="cursor-text rounded-3xl border border-zinc-200 bg-white shadow-sm focus-within:border-zinc-400 focus-within:shadow-md dark:border-white/10 dark:bg-zinc-700/50 dark:focus-within:border-white/30"
         x-on:click="$event.target.closest('button') || $refs.input.focus()"
     >
         <flux:textarea

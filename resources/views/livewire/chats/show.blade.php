@@ -10,13 +10,12 @@
     ])
 >
     @if ($isEmpty)
-        <flux:heading
-            wire:key="greeting"
-            level="1"
-            class="text-center text-3xl! font-medium! tracking-tight text-balance sm:text-4xl!"
-        >
-            {{ __('What can I help you with?') }}
-        </flux:heading>
+        {{-- flux:heading leaves a Livewire block marker behind it. Outside this wrapper, the marker makes the morph re-insert the message input, which drops its focus. --}}
+        <div wire:key="greeting">
+            <flux:heading level="1" class="text-center text-3xl! font-medium! tracking-tight text-balance sm:text-4xl!">
+                {{ __('What can I help you with?') }}
+            </flux:heading>
+        </div>
     @endif
 
     <div
