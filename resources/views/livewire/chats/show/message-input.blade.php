@@ -1,32 +1,36 @@
-<div class="absolute right-0 bottom-0 left-0 flex flex-row items-center justify-between">
-    <div class="flex w-full flex-row gap-2">
-        <flux:input
-            wire:keydown.enter="sendMessage"
-            wire:model="newMessage"
-            type="text"
-            class=""
-            placeholder="Type your message here..."
-        >
-            <x-slot name="iconTrailing">
-                <div class="flex items-center gap-1">
-                    <flux:button
-                        size="sm"
-                        variant="subtle"
-                        icon="paper-airplane"
-                        class="-mr-1"
-                        wire:click="sendMessage"
-                    />
-                    <flux:dropdown position="top" align="end">
-                        <flux:button size="sm" variant="subtle" icon="cog" class="-mr-1" />
+<div class="relative shrink-0" x-data>
+    <flux:textarea
+        wire:model="newMessage"
+        rows="auto"
+        resize="none"
+        class="max-h-48 pe-24"
+        placeholder="{{ __('Type your message here...') }}"
+        x-on:keydown.enter="
+            if (! $event.shiftKey && ! $event.isComposing) {
+                $event.preventDefault();
+                $refs.send.click();
+            }
+        "
+    />
 
-                        <flux:menu class="min-w-40">
-                            <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
-                                {{ __('Settings') }}
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
-                </div>
-            </x-slot>
-        </flux:input>
+    <div class="absolute end-2 bottom-2 flex items-center gap-1">
+        <flux:button
+            size="sm"
+            variant="ghost"
+            icon="cog-6-tooth"
+            :href="route('settings.profile')"
+            :tooltip="__('Settings')"
+            wire:navigate
+        />
+        <flux:button
+            x-ref="send"
+            size="sm"
+            variant="primary"
+            icon="paper-airplane"
+            :tooltip="__('Send')"
+            wire:click="sendMessage"
+            wire:loading.attr="disabled"
+            wire:target="sendMessage, runAgent"
+        />
     </div>
 </div>

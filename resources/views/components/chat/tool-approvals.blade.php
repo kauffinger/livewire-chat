@@ -1,36 +1,29 @@
 @props(['approvals'])
 
-<div class="flex w-full flex-row justify-start">
-    <div
-        class="max-w-fit min-w-24 space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-600 dark:bg-amber-700/20"
-    >
-        <flux:heading>{{ __('Approval needed') }}</flux:heading>
+<flux:callout variant="warning" icon="shield-exclamation">
+    <flux:callout.heading>{{ __('Approval needed') }}</flux:callout.heading>
 
-        @foreach ($approvals as $approval)
-            <div wire:key="approval-{{ $approval->id }}" class="space-y-1">
-                <div class="flex items-center gap-2 text-xs">
-                    <flux:icon.wrench-screwdriver class="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                    <span class="font-mono text-amber-700 dark:text-amber-300">{{ $approval->tool }}</span>
-                </div>
+    @foreach ($approvals as $approval)
+        <div wire:key="approval-{{ $approval->id }}" class="space-y-2">
+            <flux:badge size="sm" color="yellow" icon="wrench-screwdriver">{{ $approval->tool }}</flux:badge>
 
-                @if ($approval->reason)
-                    <flux:text>{{ $approval->reason }}</flux:text>
-                @endif
+            @if ($approval->reason)
+                <flux:callout.text>{{ $approval->reason }}</flux:callout.text>
+            @endif
 
-                <pre
-                    class="rounded bg-amber-100 p-2 text-xs break-words whitespace-pre-wrap text-amber-900 dark:bg-amber-900/40 dark:text-amber-100"
-                >
+            <pre
+                class="rounded-md bg-yellow-400/20 p-2 text-xs break-words whitespace-pre-wrap text-yellow-900 dark:text-yellow-100"
+            >
 {{ json_encode($approval->arguments, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-            </div>
-        @endforeach
-
-        <div class="flex gap-2">
-            <flux:button size="sm" variant="primary" wire:click="approveToolCalls">
-                {{ __('Approve') }}
-            </flux:button>
-            <flux:button size="sm" wire:click="rejectToolCalls">
-                {{ __('Reject') }}
-            </flux:button>
         </div>
-    </div>
-</div>
+    @endforeach
+
+    <x-slot name="actions">
+        <flux:button size="sm" variant="primary" wire:click="approveToolCalls">
+            {{ __('Approve') }}
+        </flux:button>
+        <flux:button size="sm" variant="ghost" wire:click="rejectToolCalls">
+            {{ __('Reject') }}
+        </flux:button>
+    </x-slot>
+</flux:callout>

@@ -105,7 +105,7 @@ it('allows sending messages', function (): void {
 
     actingAs($user);
 
-    livewire(Show::class, ['conversation' => $conversation])
+    $component = livewire(Show::class, ['conversation' => $conversation])
         ->set('newMessage', 'Hello, world!')
         ->call('sendMessage')
         ->assertSet('newMessage', '')
@@ -114,6 +114,12 @@ it('allows sending messages', function (): void {
         ->assertSet('pendingMessage', '')
         ->assertSeeHtml('wire:key="streaming-message-1"')
         ->assertDispatched('conversation-updated');
+
+    expect($component->effects['islandFragments'])
+        ->toHaveCount(1)
+        ->and($component->effects['islandFragments'][0])
+        ->toContain('name=messages')
+        ->toContain('Hello, human!');
 
     ChatAgent::assertPrompted('Hello, world!');
 
@@ -226,7 +232,11 @@ it('gives the message back when the assistant fails', function (): void {
         ->call('runAgent')
         ->assertSet('newMessage', 'Hello, world!')
         ->assertSet('pendingMessage', '')
-        ->assertDispatched('toast', variant: 'error', title: 'The assistant could not respond.')
+        ->assertDispatched(
+            'toast-show',
+            slots: ['text' => 'Please try again.', 'heading' => 'The assistant could not respond.'],
+            dataset: ['variant' => 'danger'],
+        )
         ->assertNotDispatched('conversation-updated');
 
     Exceptions::assertReported(RuntimeException::class);
@@ -261,6 +271,21 @@ it('escapes html in the reply while it streams', function (): void {
         ->toContain('u003Cimg')
         ->toContain('u0026')
         ->not->toContain('<img');
+});
+
+it('keeps the line breaks of a user message and escapes its html', function (): void {
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    ConversationMessageFactory::new()->for($conversation)->create([
+        'content' => "First line\n<b>Second line</b>",
+    ]);
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->assertSeeHtml("First line<br />\n&lt;b&gt;Second line&lt;/b&gt;")
+        ->assertDontSeeHtml('<b>Second line</b>');
 });
 
 it('loads messages in chronological order', function (): void {
@@ -298,11 +323,15 @@ it('renders stable message keys and keeps pending messages flush with history', 
 
     livewire(Show::class, ['conversation' => $conversation])
         ->assertDontSeeHtml('wire:key="pending-user-message"')
-        ->set('newMessage', 'Pending follow-up question')
-        ->call('sendMessage')
         ->assertSeeHtmlInOrder([
             sprintf('wire:key="message-%s"', $historyUserMessage->id),
             sprintf('wire:key="message-%s"', $historyAssistantMessage->id),
+            'wire:key="streaming-message-0"',
+        ])
+        ->set('newMessage', 'Pending follow-up question')
+        ->call('sendMessage')
+        ->assertSeeHtmlInOrder([
+            'name=messages',
             'wire:key="pending-user-message"',
             'Pending follow-up question',
             'wire:key="streaming-message-0"',
@@ -364,7 +393,7 @@ it('marks a reply the assistant could not finish', function (): void {
 
     actingAs($user);
 
-    $component = livewire(Show::class, ['conversation' => $conversation])
+    livewire(Show::class, ['conversation' => $conversation])
         ->assertDontSeeText('The assistant could not finish this response.');
 
     ConversationMessageFactory::new()->for($conversation)->assistant()->create([
@@ -372,8 +401,7 @@ it('marks a reply the assistant could not finish', function (): void {
         'status' => MessageStatus::Failed,
     ]);
 
-    $component
-        ->refresh()
+    livewire(Show::class, ['conversation' => $conversation])
         ->assertSeeText('The assistant could not finish this response.');
 });
 
@@ -386,12 +414,18 @@ it('shows the latest messages and loads earlier ones on request', function (): v
 
     actingAs($user);
 
-    livewire(Show::class, ['conversation' => $conversation])
+    $component = livewire(Show::class, ['conversation' => $conversation])
         ->assertDontSeeText('The very first message')
-        ->assertSeeText('Show earlier messages')
-        ->call('showEarlierMessages')
-        ->assertSeeText('The very first message')
-        ->assertDontSeeText('Show earlier messages');
+        ->assertSeeHtml('wire:intersect="showEarlierMessages"');
+
+    expect($component->get('messages'))->toHaveCount(20);
+
+    $component->call('showEarlierMessages');
+
+    expect($component->get('messages'))
+        ->toHaveCount(21)
+        ->and($component->get('messages')[0]['content'])->toBe('The very first message')
+        ->and($component->get('history')->hasMorePages())->toBeFalse();
 });
 
 it('asks for approval before a tool call that needs it', function (): void {

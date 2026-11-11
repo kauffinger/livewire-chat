@@ -1,12 +1,9 @@
-@props(['message', 'index'])
+@props(['message'])
 
-<div class="flex w-full flex-row justify-end" id="user-message-{{ $index }}">
-    <div
-        class="max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
-    >
-        <flux:heading>You</flux:heading>
-        <flux:text>
-            {{ $message['content'] }}
+<div class="flex w-full justify-end">
+    <div class="max-w-[85%] rounded-2xl bg-zinc-100 px-4 py-2.5 dark:bg-zinc-700">
+        <flux:text class="break-words text-zinc-800 dark:text-white">
+            {!! nl2br(e($message['content'])) !!}
         </flux:text>
     </div>
 </div>

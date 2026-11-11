@@ -4,6 +4,7 @@ namespace App\Livewire\Chats;
 
 use App\Actions\UpdateStreamDataFromAiEvent;
 use App\Ai\Agents\ChatAgent;
+use Flux\Flux;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -165,11 +166,10 @@ class Show extends Component
 
             $this->newMessage = $this->pendingMessage;
 
-            $this->dispatch(
-                'toast',
-                variant: 'error',
-                title: __('The assistant could not respond.'),
-                description: __('Please try again.'),
+            Flux::toast(
+                variant: 'danger',
+                heading: __('The assistant could not respond.'),
+                text: __('Please try again.'),
             );
 
             return;
@@ -178,6 +178,7 @@ class Show extends Component
             $this->streamedTurns++;
 
             unset($this->history, $this->messages, $this->pendingApprovals);
+            $this->renderIsland('messages');
         }
 
         if ($this->conversationId === null) {

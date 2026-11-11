@@ -9,11 +9,27 @@
 import markdownit from 'markdown-it';
 import hljs from 'highlight.js';
 
+function loadHighlightTheme(isDark) {
+    let link = document.head.querySelector('link[data-highlight-theme]');
+
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.setAttribute('data-highlight-theme', 'dynamic');
+        document.head.appendChild(link);
+    }
+
+    const themeUrl = isDark ? '/css/highlight/github-dark.css' : '/css/highlight/github-light.css';
+
+    if (link.getAttribute('href') !== themeUrl) {
+        link.href = themeUrl;
+    }
+}
+
 export default function markdownProcessor() {
     return {
         md: null,
         html: '', // rendered output for <article x-html="html">
-        currentThemeLink: null, // track the current theme link element
         // Chunk type data
         streamData: {
             text: '',
@@ -45,12 +61,9 @@ export default function markdownProcessor() {
 
             this.md.linkify.set({ fuzzyEmail: false });
 
-            this.loadHighlightTheme();
+            loadHighlightTheme(this.$flux.dark);
 
-            // Watch for dark mode changes and update theme accordingly
-            this.$watch('$flux.dark', () => {
-                this.loadHighlightTheme();
-            });
+            this.$watch('$flux.dark', (isDark) => loadHighlightTheme(isDark));
 
             // first paint
             this.render();
@@ -61,26 +74,6 @@ export default function markdownProcessor() {
                 characterData: true,
                 subtree: true,
             });
-        },
-
-        loadHighlightTheme() {
-            // Remove existing theme if it exists
-            if (this.currentThemeLink) {
-                this.currentThemeLink.remove();
-                this.currentThemeLink = null;
-            }
-
-            const isDark = this.$flux?.dark || false;
-
-            const themeUrl = isDark ? '/css/highlight/github-dark.css' : '/css/highlight/github-light.css';
-
-            // Create and append new theme link
-            this.currentThemeLink = document.createElement('link');
-            this.currentThemeLink.rel = 'stylesheet';
-            this.currentThemeLink.href = themeUrl;
-            this.currentThemeLink.setAttribute('data-highlight-theme', 'dynamic');
-
-            document.head.appendChild(this.currentThemeLink);
         },
 
         render() {
@@ -115,6 +108,10 @@ export default function markdownProcessor() {
 
         hasToolCalls() {
             return this.streamData.toolCalls && this.streamData.toolCalls.length > 0;
+        },
+
+        isWaiting() {
+            return this.html.length === 0 && !this.hasThinking() && !this.hasToolCalls();
         },
 
         isCurrentlyThinking() {

@@ -172,7 +172,10 @@
 
         {{ $slot }}
 
-        <x-toast position="top-right" />
+        @persist('toast')
+            <flux:toast position="top end" />
+        @endpersist
+
         @livewireScriptConfig
         @fluxScripts
     </body>
