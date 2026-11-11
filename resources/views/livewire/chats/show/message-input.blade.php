@@ -1,31 +1,75 @@
-<div class="relative mx-auto w-full max-w-3xl shrink-0" x-data>
-    <flux:textarea
-        wire:model="newMessage"
-        rows="auto"
-        resize="none"
-        class="max-h-48 pe-14 focus:border-zinc-500! focus:ring-1! focus:ring-zinc-500! focus:ring-offset-0! dark:focus:border-zinc-400! dark:focus:ring-zinc-400!"
-        aria-label="{{ __('Message') }}"
-        placeholder="{{ __('Type your message here...') }}"
-        x-init="matchMedia('(pointer: fine)').matches && $el.focus()"
-        x-on:keydown.enter="
-            if (! $event.shiftKey && ! $event.isComposing) {
-                $event.preventDefault();
-                $refs.send.click();
-            }
-        "
-    />
-
-    <div class="absolute end-2 bottom-2">
-        <flux:button
-            x-ref="send"
-            size="sm"
-            variant="primary"
-            icon="paper-airplane"
-            :tooltip="__('Send')"
-            tooltip:kbd="Enter"
-            aria-label="{{ __('Send') }}"
-            wire:click="sendMessage"
-            x-bind:disabled="$wire.newMessage.trim() === '' || $wire.pendingMessage !== ''"
+<div
+    wire:key="message-input"
+    @if ($conversationId === null && $streamedTurns === 0)
+        wire:transition="message-input"
+    @endif
+    class="mx-auto w-full max-w-3xl shrink-0"
+    x-data="{
+        stop: () => {},
+        init() {
+            $wire.$intercept('runAgent', ({ action }) => {
+                this.stop = () => {
+                    action.cancel();
+                    $wire.stopAgent();
+                    this.$refs.input.focus();
+                };
+            });
+        },
+    }"
+>
+    <div
+        class="cursor-text rounded-3xl border border-zinc-200 bg-white shadow-sm transition focus-within:border-zinc-400 focus-within:shadow-md dark:border-white/10 dark:bg-zinc-700/50 dark:focus-within:border-white/30"
+        x-on:click="$event.target.closest('button') || $refs.input.focus()"
+    >
+        <flux:textarea
+            x-ref="input"
+            wire:model="newMessage"
+            rows="auto"
+            resize="none"
+            class="max-h-60 border-0! bg-transparent! px-5! pt-4! pb-2! text-base! shadow-none! focus:ring-0! focus:ring-offset-0!"
+            aria-label="{{ __('Message') }}"
+            placeholder="{{ __('Ask anything') }}"
+            x-init="matchMedia('(pointer: fine)').matches && $el.focus()"
+            x-on:keydown.enter="
+                if (! $event.shiftKey && ! $event.isComposing) {
+                    $event.preventDefault();
+                    $refs.send.click();
+                }
+            "
         />
+
+        <div class="flex items-center justify-between gap-3 ps-5 pe-3 pb-3">
+            <flux:text size="sm" class="max-sm:invisible pointer-coarse:invisible">
+                {{ __('Enter to send, Shift + Enter for a new line') }}
+            </flux:text>
+
+            <div class="flex shrink-0">
+                <flux:button
+                    x-ref="send"
+                    size="sm"
+                    variant="primary"
+                    icon="arrow-up"
+                    class="rounded-full!"
+                    :tooltip="__('Send')"
+                    tooltip:kbd="Enter"
+                    aria-label="{{ __('Send') }}"
+                    wire:click="sendMessage"
+                    x-show="$wire.pendingMessage === ''"
+                    x-bind:disabled="$wire.newMessage.trim() === '' || $wire.pendingMessage !== ''"
+                />
+
+                <flux:button
+                    size="sm"
+                    variant="primary"
+                    icon="stop"
+                    class="rounded-full!"
+                    style="display: none"
+                    :tooltip="__('Stop')"
+                    aria-label="{{ __('Stop') }}"
+                    x-show="$wire.pendingMessage !== ''"
+                    x-on:click="stop()"
+                />
+            </div>
+        </div>
     </div>
 </div>

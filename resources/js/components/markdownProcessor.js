@@ -26,7 +26,7 @@ function loadHighlightTheme(isDark) {
     }
 }
 
-export default function markdownProcessor() {
+export default function markdownProcessor(labels) {
     return {
         md: null,
         html: '', // rendered output for <article x-html="html">
@@ -61,6 +61,15 @@ export default function markdownProcessor() {
             });
 
             this.md.linkify.set({ fuzzyEmail: false });
+
+            const renderFence = this.md.renderer.rules.fence;
+
+            this.md.renderer.rules.fence = (tokens, index, options, env, self) => {
+                const language = this.md.utils.escapeHtml(tokens[index].info.trim().split(/\s+/)[0] || 'text');
+                const copyLabel = this.md.utils.escapeHtml(labels.copy);
+
+                return `<div class="code-block"><div class="code-block-header"><span>${language}</span><button type="button" data-copy-code>${copyLabel}</button></div>${renderFence(tokens, index, options, env, self)}</div>`;
+            };
 
             loadHighlightTheme(this.$flux.dark);
 
@@ -107,6 +116,24 @@ export default function markdownProcessor() {
             setTimeout(() => (this.copied = false), 2000);
         },
 
+        async copyCode(event) {
+            const button = event.target.closest('[data-copy-code]');
+
+            if (!button) {
+                return;
+            }
+
+            await navigator.clipboard.writeText(button.closest('.code-block').querySelector('code').innerText);
+
+            button.textContent = labels.copied;
+
+            setTimeout(() => (button.textContent = labels.copy), 2000);
+        },
+
+        formatToolResult(result) {
+            return typeof result === 'string' ? result : JSON.stringify(result);
+        },
+
         toggleThinking() {
             this.showThinking = !this.showThinking;
         },
@@ -119,12 +146,8 @@ export default function markdownProcessor() {
             return this.streamData.toolCalls && this.streamData.toolCalls.length > 0;
         },
 
-        isWaiting() {
-            return this.html.length === 0 && !this.hasThinking() && !this.hasToolCalls();
-        },
-
-        isCurrentlyThinking() {
-            return this.streamData.currentChunkType === 'reasoning_delta';
+        isWriting() {
+            return ['text_delta', 'text_end', 'stream_end'].includes(this.streamData.currentChunkType);
         },
 
         isCurrentlyUsingTools() {

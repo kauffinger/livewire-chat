@@ -1,29 +1,48 @@
 @props(['approvals'])
 
-<flux:callout variant="warning" icon="shield-exclamation">
-    <flux:callout.heading>{{ __('Approval needed') }}</flux:callout.heading>
+<div
+    class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-700/50"
+    role="group"
+    aria-label="{{ __('Approval needed') }}"
+>
+    <div class="flex items-start gap-3">
+        <flux:icon.shield-exclamation class="size-6 shrink-0 text-amber-600 dark:text-amber-400" />
 
-    @foreach ($approvals as $approval)
-        <div wire:key="approval-{{ $approval->id }}" class="space-y-2">
-            <flux:badge size="sm" color="yellow" icon="wrench-screwdriver">{{ $approval->tool }}</flux:badge>
+        <div class="min-w-0 flex-1 space-y-4">
+            <flux:heading size="lg">{{ __('Approval needed') }}</flux:heading>
 
-            @if ($approval->reason)
-                <flux:callout.text>{{ $approval->reason }}</flux:callout.text>
-            @endif
+            @foreach ($approvals as $approval)
+                <div wire:key="approval-{{ $approval->id }}" class="space-y-2">
+                    @if ($approval->reason)
+                        <flux:text size="lg">{{ $approval->reason }}</flux:text>
+                    @endif
 
-            <pre
-                class="rounded-md bg-yellow-400/20 p-2 text-xs break-words whitespace-pre-wrap text-yellow-900 dark:text-yellow-100"
-            >
-{{ json_encode($approval->arguments, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                    <dl
+                        class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-xl bg-zinc-100 px-4 py-3 text-sm dark:bg-zinc-900/40"
+                    >
+                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Tool') }}</dt>
+                        <dd class="min-w-0 font-mono break-words text-zinc-800 dark:text-white">
+                            {{ $approval->tool }}
+                        </dd>
+
+                        @foreach ($approval->arguments as $name => $value)
+                            <dt class="text-zinc-500 dark:text-zinc-400">{{ $name }}</dt>
+                            <dd class="min-w-0 break-words text-zinc-800 dark:text-white">
+                                {{ is_string($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE) }}
+                            </dd>
+                        @endforeach
+                    </dl>
+                </div>
+            @endforeach
         </div>
-    @endforeach
+    </div>
 
-    <x-slot name="actions">
-        <flux:button size="sm" variant="primary" wire:click="approveToolCalls">
-            {{ __('Approve') }}
-        </flux:button>
-        <flux:button size="sm" variant="ghost" wire:click="rejectToolCalls">
+    <div class="mt-5 flex justify-end gap-2">
+        <flux:button variant="ghost" wire:click="rejectToolCalls">
             {{ __('Reject') }}
         </flux:button>
-    </x-slot>
-</flux:callout>
+        <flux:button variant="primary" wire:click="approveToolCalls">
+            {{ __('Approve') }}
+        </flux:button>
+    </div>
+</div>

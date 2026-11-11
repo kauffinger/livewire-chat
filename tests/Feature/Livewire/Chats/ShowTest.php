@@ -172,6 +172,40 @@ it('does not run the agent without a pending message', function (): void {
     ChatAgent::assertNeverPrompted();
 });
 
+it('gives the message back when the reply is stopped', function (): void {
+    ChatAgent::fake();
+
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->set('newMessage', 'Hello, world!')
+        ->call('sendMessage')
+        ->assertSeeHtml('wire:key="pending-user-message"')
+        ->call('stopAgent')
+        ->assertSet('newMessage', 'Hello, world!')
+        ->assertSet('pendingMessage', '')
+        ->assertDontSeeHtml('wire:key="pending-user-message"')
+        ->assertSeeHtml('wire:key="streaming-message-1"');
+
+    ChatAgent::assertNeverPrompted();
+});
+
+it('keeps the typed message when no reply is running to stop', function (): void {
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->set('newMessage', 'Still typing')
+        ->call('stopAgent')
+        ->assertSet('newMessage', 'Still typing')
+        ->assertSeeHtml('wire:key="streaming-message-0"');
+});
+
 it('renders the new conversation page', function (): void {
     actingAs(User::factory()->create());
 

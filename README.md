@@ -109,8 +109,10 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 ### UI Components
 
 - **Chat Interface:** Real-time streaming with markdown rendering
-- **Tool Calls Display:** Visual feedback for LLM tool executions
-- **Message Input:** Grows with the text. Enter sends, Shift+Enter starts a new line, and sending is blocked while a reply streams
+- **Tool Calls Display:** Each tool call is a row that opens to show its arguments and result
+- **Tool Approval:** A tool call that needs approval takes the place of the message input until you approve or reject it
+- **Message Input:** Sits in the middle of a new conversation and docks to the bottom once it starts. It grows with the text, Enter sends and Shift+Enter starts a new line. While a reply streams, the send button becomes a stop button
+- **Code Blocks:** Show their language and a copy button
 - **Earlier Messages:** Loaded when you scroll to the top of a conversation
 - **Toast Notifications:** Flux toasts for user feedback
 
@@ -124,7 +126,8 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
 5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
-7. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
+7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
+8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
 
 Titles are written by the provider's cheapest model. Set `ai.conversations.generate_title` to `false` in `config/ai.php` to use the start of the first message instead.
 

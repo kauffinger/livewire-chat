@@ -122,6 +122,17 @@ class Show extends Component
         $this->streamAgent($this->pendingMessage);
     }
 
+    public function stopAgent(): void
+    {
+        if ($this->pendingMessage === '') {
+            return;
+        }
+
+        $this->newMessage = $this->pendingMessage;
+        $this->pendingMessage = '';
+        $this->streamedTurns++;
+    }
+
     public function approveToolCalls(): void
     {
         if ($this->pendingApprovals === []) {
