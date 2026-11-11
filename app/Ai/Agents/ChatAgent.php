@@ -2,13 +2,18 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\Sum;
+use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
+use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Promptable;
+use Laravel\Ai\Providers\Tools\ProviderTool;
 use Stringable;
 
+#[MaxSteps(5)]
 class ChatAgent implements Agent, Conversational, HasTools
 {
     use Promptable;
@@ -25,10 +30,12 @@ class ChatAgent implements Agent, Conversational, HasTools
     /**
      * Get the tools available to the agent.
      *
-     * @return Tool[]
+     * @return list<Agent|Tool|ProviderTool>
      */
     public function tools(): iterable
     {
-        return [];
+        return [
+            new Sum,
+        ];
     }
 }

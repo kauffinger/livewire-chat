@@ -2,10 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\AgentConversation;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -17,13 +15,10 @@ class Dashboard extends Component
 
     public function mount(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $latestConversation = $user->conversations()->latest()->first();
+        $latestConversation = Auth::user()->conversations()->latest()->first();
 
         if ($latestConversation) {
-            $this->redirectRoute('conversation.show', ['conversation' => $latestConversation->id], navigate: true);
+            $this->redirectRoute('conversation.show', $latestConversation, navigate: true);
 
             return;
         }
@@ -33,19 +28,10 @@ class Dashboard extends Component
 
     public function createNewConversation(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $conversation = AgentConversation::create([
-            'id' => (string) Str::uuid7(),
-            'user_id' => $user->id,
-            'title' => __('New chat'),
-        ]);
-
-        $this->redirectRoute('conversation.show', ['conversation' => $conversation->id], navigate: true);
+        $this->redirectRoute('conversation.show', Auth::user()->startConversation(), navigate: true);
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.dashboard');
     }

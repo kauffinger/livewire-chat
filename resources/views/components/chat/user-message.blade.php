@@ -6,7 +6,7 @@
     >
         <flux:heading>You</flux:heading>
         <flux:text>
-            {{ is_array($message) ? ($message['content'] ?? '') : ($message->content ?? $message->parts['text'] ?? '') }}
+            {{ $message['content'] }}
         </flux:text>
     </div>
 </div>

@@ -7,14 +7,11 @@
         <flux:heading>Tool Results</flux:heading>
 
         <div x-data="{
-            toolResults: @js($message->toolResults ?? []),
+            toolResults: @js($message['toolResults'] ?? []),
         }">
             <!-- Tool results display -->
             <div class="space-y-2">
-                <template
-                    x-for="result in toolResults"
-                    :key="result.id + (result.resultId || '')"
-                >
+                <template x-for="result in toolResults" :key="result.id + (result.resultId || '')">
                     <div class="border-b border-green-200 pb-2 last:border-b-0 dark:border-green-600">
                         <div class="mb-1 flex items-center gap-2">
                             <flux:icon.check-circle class="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -25,11 +22,7 @@
                         </div>
                         <div class="pl-6 text-xs text-green-600 dark:text-green-400">
                             <div
-                                x-text="
-                                    typeof result.result === 'string'
-                                        ? result.result
-                                        : JSON.stringify(result.result)
-                                "
+                                x-text="typeof result.result === 'string' ? result.result : JSON.stringify(result.result)"
                                 class="break-words"
                             ></div>
                         </div>

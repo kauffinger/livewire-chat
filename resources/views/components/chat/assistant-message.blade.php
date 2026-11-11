@@ -1,6 +1,5 @@
 @props([
-    'message' => null,
-    'isFirst' => false,
+    'message' => [],
     'isLoading' => false,
     'wireStream' => null,
     'wireReplace' => false,
@@ -9,18 +8,7 @@
     'thinkingProseSize' => 'prose-sm',
 ])
 
-@php
-    $content = '';
-    if ($message) {
-        if (is_array($message)) {
-            $content = $message['content'] ?? '';
-        } elseif (is_object($message)) {
-            $content = $message->content ?? ($message->parts['text'] ?? '');
-        }
-    }
-@endphp
-
-<div class="@if ($isFirst) flex-1 @endif flex w-full flex-row justify-start">
+<div class="flex w-full flex-row justify-start">
     <div
         class="prose prose-sm max-h-fit max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
         x-data="markdownProcessor()"
@@ -90,7 +78,7 @@
                     wire:replace
                 @endif
             >
-                {{ $isLoading ? '' : json_encode(['text' => $content]) }}
+                {{ $isLoading ? '' : json_encode(['text' => $message['content'] ?? '', 'toolCalls' => $message['toolCalls'] ?? []]) }}
             </span>
             <article
                 wire:ignore

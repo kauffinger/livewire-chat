@@ -4,11 +4,11 @@ namespace App\Livewire\Chats;
 
 use App\Actions\UpdateStreamDataFromAiEvent;
 use App\Ai\Agents\ChatAgent;
-use App\Models\AgentConversation;
-use App\Models\AgentConversationMessage;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Models\ConversationMessage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -16,57 +16,73 @@ use Livewire\Component;
 class Show extends Component
 {
     #[Locked]
-    public AgentConversation $conversation;
+    public Conversation $conversation;
 
     public string $newMessage = '';
 
-    public function mount(AgentConversation $conversation): void
-    {
-        /** @var User|null $user */
-        $user = Auth::user();
+    #[Locked]
+    public string $pendingMessage = '';
 
-        abort_unless($user && $conversation->user_id === $user->id, 403);
+    public function mount(Conversation $conversation): void
+    {
+        abort_unless($conversation->participant?->is(Auth::user()), 403);
 
         $this->conversation = $conversation;
     }
 
+    /**
+     * @return array<int, array{id: string, role: string, content: string, toolCalls: array<int, array<string, mixed>>}>
+     */
     #[Computed]
     public function messages(): array
     {
         return $this->conversation
             ->messages()
-            ->oldest()
+            ->orderBy('id')
             ->get()
-            ->map(fn (AgentConversationMessage $message) => [
+            ->map(fn (ConversationMessage $message): array => [
+                'id' => $message->id,
                 'role' => $message->role,
-                'content' => $message->content,
+                'content' => (string) $message->content,
+                'toolCalls' => $message->tool_calls,
             ])
             ->all();
     }
 
     public function sendMessage(): void
     {
-        if (trim($this->newMessage) === '') {
+        $message = trim($this->newMessage);
+
+        if ($message === '') {
             return;
         }
+
+        $this->pendingMessage = $message;
+        $this->newMessage = '';
 
         $this->js('$wire.runAgent()');
     }
 
-    public function runAgent(): void
+    public function runAgent(UpdateStreamDataFromAiEvent $updateStreamData): void
     {
-        /** @var User $user */
-        $user = Auth::user();
+        if ($this->pendingMessage === '') {
+            return;
+        }
 
-        $streamDataUpdater = app(UpdateStreamDataFromAiEvent::class);
-        $streamData = $streamDataUpdater->initial();
+        if ($this->conversation->messages()->doesntExist()) {
+            $this->conversation->update([
+                'title' => Str::limit($this->pendingMessage, 50, preserveWords: true),
+            ]);
+        }
 
         $stream = ChatAgent::make()
-            ->continue($this->conversation->id, as: $user)
-            ->stream($this->newMessage);
+            ->continue($this->conversation->id, as: Auth::user())
+            ->stream($this->pendingMessage);
+
+        $streamData = $updateStreamData->initial();
 
         foreach ($stream as $event) {
-            $streamData = $streamDataUpdater->handle($streamData, $event);
+            $streamData = $updateStreamData->handle($streamData, $event);
 
             $this->stream(
                 json_encode($streamData),
@@ -75,8 +91,11 @@ class Show extends Component
             );
         }
 
-        $this->newMessage = '';
+        $this->pendingMessage = '';
+
         unset($this->messages);
+
+        $this->dispatch('conversation-updated');
     }
 
     public function render(): View

@@ -3,7 +3,12 @@
         <!-- New Conversation button - fixed at top -->
         <div class="mb-2 flex-shrink-0">
             @auth
-                <flux:button icon="plus" size="sm" class="w-full hover:cursor-pointer" wire:click="createNewConversation">
+                <flux:button
+                    icon="plus"
+                    size="sm"
+                    class="w-full hover:cursor-pointer"
+                    wire:click="createNewConversation"
+                >
                     {{ __('New Conversation') }}
                 </flux:button>
             @elseguest
@@ -22,7 +27,7 @@
                     :href="route('conversation.show', $conversation['id'])"
                     icon="layout-grid"
                     :current="$activeConversationId === $conversation['id']"
-                    wire:key="$conversation['id']"
+                    wire:key="conversation-{{ $conversation['id'] }}"
                     wire:navigate
                 >
                     {{ $conversation['title'] }}

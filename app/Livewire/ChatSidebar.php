@@ -2,12 +2,12 @@
 
 namespace App\Livewire;
 
-use App\Models\AgentConversation;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Laravel\Ai\Models\Conversation;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ChatSidebar extends Component
@@ -19,6 +19,9 @@ class ChatSidebar extends Component
         $this->activeConversationId = request()->route('conversation')?->id;
     }
 
+    /**
+     * @return array<int, array{id: string, title: string}>
+     */
     #[Computed]
     public function conversations(): array
     {
@@ -27,25 +30,22 @@ class ChatSidebar extends Component
             ->latest('updated_at')
             ->limit(5)
             ->get()
-            ->map(fn (AgentConversation $conversation) => [
+            ->map(fn (Conversation $conversation): array => [
                 'id' => $conversation->id,
-                'title' => (string) Str::limit($conversation->title, 20),
+                'title' => Str::limit($conversation->title, 20),
             ])
             ->all() ?? [];
     }
 
+    #[On('conversation-updated')]
+    public function refreshConversations(): void
+    {
+        unset($this->conversations);
+    }
+
     public function createNewConversation(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $conversation = AgentConversation::create([
-            'id' => (string) Str::uuid7(),
-            'user_id' => $user->id,
-            'title' => __('New chat'),
-        ]);
-
-        $this->redirect(route('conversation.show', $conversation), navigate: true);
+        $this->redirectRoute('conversation.show', Auth::user()->startConversation(), navigate: true);
     }
 
     public function render(): View
