@@ -40,7 +40,7 @@ export default function markdownProcessor() {
                             console.warn('Highlight.js error:', err);
                         }
                     }
-                    return `<pre><code class="hljs">${str}</code></pre>`;
+                    return `<pre><code class="hljs">${this.md.utils.escapeHtml(str)}</code></pre>`;
                 },
             });
 
