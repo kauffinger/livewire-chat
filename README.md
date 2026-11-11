@@ -110,7 +110,9 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 
 - **Chat Interface:** Real-time streaming with markdown rendering
 - **Tool Calls Display:** Visual feedback for LLM tool executions
-- **Toast Notifications:** Built-in toast system for user feedback
+- **Message Input:** Grows with the text. Enter sends, Shift+Enter starts a new line, and sending is blocked while a reply streams
+- **Earlier Messages:** Loaded when you scroll to the top of a conversation
+- **Toast Notifications:** Flux toasts for user feedback
 
 ## How it Works
 
@@ -120,7 +122,7 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
 3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
 4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
-5. **UI Updates:** Livewire streams update the interface in real-time
+5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
 7. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
 
@@ -141,55 +143,42 @@ Titles are written by the provider's cheapest model. Set `ai.conversations.gener
 
 ## Toast Notifications
 
-The chat kit includes a built-in toast notification system for user feedback.
-
-### Basic Setup
-
-Add the toast container to your layout (e.g., in `resources/views/layouts/app.blade.php`):
-
-```blade
-<x-toast position="bottom-right" />
-```
+Toasts are [Flux toasts](https://fluxui.dev/components/toast). The `<flux:toast />` element lives in `resources/views/components/layouts/app/sidebar.blade.php`.
 
 ### Usage in Livewire Components
 
 ```php
-// In your Livewire component - using named parameters
-$this->dispatch('toast',
+use Flux\Flux;
+
+Flux::toast(
     variant: 'success',
-    title: 'Success!',
-    description: 'Your changes have been saved.',
-    icon: 'check-circle',
-    duration: 3000
+    heading: 'Changes saved.',
+    text: 'You can always update this in your settings.',
 );
 ```
 
 ### Usage with Alpine.js
 
 ```blade
-<button
-  @click="$dispatch('toast', {
-    variant: 'success',
-    title: 'Success!',
-    description: 'Your changes have been saved.'
-})"
+<flux:button
+  x-on:click="
+    $flux.toast({
+      variant: 'success',
+      heading: 'Changes saved.',
+      text: 'You can always update this in your settings.',
+    })
+  "
 >
   Show Success Toast
-</button>
+</flux:button>
 ```
 
 ### Toast Options
 
-- `variant`: 'default' | 'success' | 'error' | 'danger' | 'warning' | 'info'
-- `title`: The main message
-- `description`: Additional details (optional)
-- `icon`: Icon name (optional, auto-set based on variant)
-- `dismissible`: Whether the toast can be dismissed (default: true)
-- `duration`: Auto-dismiss after milliseconds (default: 5000, use 0 to disable)
-
-### Container Positions
-
-- `position`: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' (default: 'bottom-right')
+- `variant`: 'success' | 'warning' | 'danger'
+- `heading`: The title (optional)
+- `text`: The message
+- `duration`: Auto-dismiss after milliseconds (default: 5000, use 0 to keep it open)
 
 ## Contributing
 
