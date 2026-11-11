@@ -42,6 +42,17 @@ class ConversationMessageFactory extends Factory
     }
 
     /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (ConversationMessage $message): void {
+            $message->participant_type = $message->conversation->participant_type;
+            $message->participant_id = $message->conversation->participant_id;
+        });
+    }
+
+    /**
      * Indicate that the message was written by the assistant.
      */
     public function assistant(): static

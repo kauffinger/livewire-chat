@@ -2,22 +2,15 @@
     <flux:navlist.group heading="{{ __('Conversations') }}">
         <!-- New Conversation button - fixed at top -->
         <div class="mb-2 flex-shrink-0">
-            @auth
-                <flux:button
-                    icon="plus"
-                    size="sm"
-                    class="w-full hover:cursor-pointer"
-                    wire:click="createNewConversation"
-                >
-                    {{ __('New Conversation') }}
-                </flux:button>
-            @elseguest
-                <a href="{{ route('login') }}" wire:navigate>
-                    <flux:button icon="plus" size="sm" class="w-full hover:cursor-pointer">
-                        {{ __('New Conversation') }}
-                    </flux:button>
-                </a>
-            @endauth
+            <flux:button
+                icon="plus"
+                size="sm"
+                class="w-full hover:cursor-pointer"
+                :href="route('conversation.create')"
+                wire:navigate
+            >
+                {{ __('New Conversation') }}
+            </flux:button>
         </div>
 
         <!-- Scrollable conversation list -->

@@ -16,20 +16,11 @@ it('mounts successfully', function (): void {
         ->assertSeeText('New Conversation');
 });
 
-it('shows new conversation button for authenticated users', function (): void {
+it('links to a new conversation', function (): void {
     actingAs(User::factory()->create());
 
     livewire(ChatSidebar::class)
-        ->assertOk()
-        ->assertSeeHtml('wire:click="createNewConversation"')
-        ->assertDontSeeHtml('href="'.route('login').'"');
-});
-
-it('shows login link for guests', function (): void {
-    livewire(ChatSidebar::class)
-        ->assertOk()
-        ->assertSeeHtml('href="'.route('login').'"')
-        ->assertDontSeeHtml('wire:click="createNewConversation"');
+        ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
 it('displays user conversations', function (): void {
@@ -74,19 +65,6 @@ it('highlights active conversation', function (): void {
         ->set('activeConversationId', $conversation->id)
         ->assertOk()
         ->assertSet('activeConversationId', $conversation->id);
-});
-
-it('creates new conversation and redirects', function (): void {
-    $user = User::factory()->create();
-
-    actingAs($user);
-
-    livewire(ChatSidebar::class)
-        ->call('createNewConversation')
-        ->assertRedirect();
-
-    expect($user->conversations)->toHaveCount(1)
-        ->and($user->conversations()->first()->title)->toBe('New chat');
 });
 
 it('shows show all conversations button for authenticated users', function (): void {

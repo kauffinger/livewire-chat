@@ -73,17 +73,6 @@ final class User extends Authenticatable
     }
 
     /**
-     * Start a new, untitled conversation for the user.
-     */
-    public function startConversation(): Conversation
-    {
-        return $this->conversations()->create([
-            'id' => (string) Str::uuid7(),
-            'title' => __('New chat'),
-        ]);
-    }
-
-    /**
      * Get the user's initials
      */
     public function initials(): string

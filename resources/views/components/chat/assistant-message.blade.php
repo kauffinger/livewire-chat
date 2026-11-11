@@ -62,6 +62,11 @@
                 <div class="mt-1 flex items-center gap-2 text-xs">
                     <flux:icon.wrench-screwdriver class="h-3 w-3 text-blue-500" />
                     <span x-text="toolCall.name" class="font-mono text-blue-600 dark:text-blue-400"></span>
+                    <flux:icon.check
+                        x-show="'result' in toolCall && ! toolCall.denied"
+                        class="h-3 w-3 text-green-500"
+                    />
+                    <flux:icon.x-mark x-show="toolCall.denied" class="h-3 w-3 text-red-500" />
                 </div>
             </template>
         </div>
@@ -78,7 +83,7 @@
                     wire:replace
                 @endif
             >
-                {{ $isLoading ? '' : json_encode(['text' => $message['content'] ?? '', 'toolCalls' => $message['toolCalls'] ?? []]) }}
+                {{ $isLoading ? '' : json_encode(['text' => $message['content'] ?? '', 'thinking' => $message['thinking'] ?? '', 'toolCalls' => $message['toolCalls'] ?? []]) }}
             </span>
             <article
                 wire:ignore
@@ -89,5 +94,11 @@
                 @endif
             ></article>
         </flux:text>
+
+        @if ($message['failed'] ?? false)
+            <flux:text class="text-red-600 dark:text-red-400">
+                {{ __('The assistant could not finish this response.') }}
+            </flux:text>
+        @endif
     </div>
 </div>

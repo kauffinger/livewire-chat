@@ -11,11 +11,6 @@ class Index extends Component
 {
     use WithPagination;
 
-    public function createNewConversation(): void
-    {
-        $this->redirectRoute('conversation.show', Auth::user()->startConversation(), navigate: true);
-    }
-
     public function render(): View
     {
         return view('livewire.chats.index', [

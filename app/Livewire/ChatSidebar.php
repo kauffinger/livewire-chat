@@ -43,11 +43,6 @@ class ChatSidebar extends Component
         unset($this->conversations);
     }
 
-    public function createNewConversation(): void
-    {
-        $this->redirectRoute('conversation.show', Auth::user()->startConversation(), navigate: true);
-    }
-
     public function render(): View
     {
         return view('livewire.chat-sidebar');

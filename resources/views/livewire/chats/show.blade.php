@@ -5,6 +5,20 @@
         x-init="$el.scrollTop = $el.scrollHeight"
     >
         <div class="mb-auto flex flex-col gap-4 py-1">
+            @if ($this->history?->hasMorePages())
+                <div wire:key="earlier-messages" class="flex justify-center">
+                    <flux:button size="sm" variant="ghost" icon="arrow-up" wire:click="showEarlierMessages">
+                        {{ __('Show earlier messages') }}
+                    </flux:button>
+                </div>
+            @endif
+
+            @if ($this->messages === [] && $pendingMessage === '')
+                <flux:heading size="xl" level="1" class="py-12 text-center">
+                    {{ __('What can I help you with?') }}
+                </flux:heading>
+            @endif
+
             @foreach ($this->messages as $message)
                 <div wire:key="message-{{ $message['id'] }}">
                     @if ($message['role'] === 'user')
@@ -21,16 +35,24 @@
                 </div>
             @endif
 
+            @if ($this->pendingApprovals !== [])
+                <div wire:key="pending-approvals" wire:loading.remove wire:target="approveToolCalls, rejectToolCalls">
+                    <x-chat.tool-approvals :approvals="$this->pendingApprovals" />
+                </div>
+            @endif
+
             <div
                 wire:loading.flex
-                wire:target="runAgent"
-                wire:key="streaming-message-{{ count($this->messages) }}"
+                wire:target="runAgent, approveToolCalls, rejectToolCalls"
+                wire:key="streaming-message-{{ $streamedTurns }}"
                 class="relative mx-auto hidden w-full max-w-4xl"
             >
                 <x-chat.assistant-message :is-loading="true" wire-stream="streamed-message" :wire-replace="true" />
             </div>
         </div>
 
-        @include('livewire.chats.show.message-input')
+        @if ($this->pendingApprovals === [])
+            @include('livewire.chats.show.message-input')
+        @endif
     </div>
 </div>

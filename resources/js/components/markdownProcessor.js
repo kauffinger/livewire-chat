@@ -20,7 +20,6 @@ export default function markdownProcessor() {
             thinking: '',
             meta: '',
             toolCalls: [],
-            toolResults: [],
             currentChunkType: 'text',
         },
         thinkingHtml: '',
@@ -116,10 +115,6 @@ export default function markdownProcessor() {
 
         hasToolCalls() {
             return this.streamData.toolCalls && this.streamData.toolCalls.length > 0;
-        },
-
-        hasToolResults() {
-            return this.streamData.toolResults && this.streamData.toolResults.length > 0;
         },
 
         isCurrentlyThinking() {

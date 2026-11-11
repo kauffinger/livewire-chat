@@ -2,8 +2,10 @@
 
 namespace App\Actions;
 
+use Illuminate\Support\Arr;
 use Laravel\Ai\Streaming\Events\ReasoningDelta;
 use Laravel\Ai\Streaming\Events\StreamEvent;
+use Laravel\Ai\Streaming\Events\StreamStart;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
 use Laravel\Ai\Streaming\Events\ToolResult;
@@ -11,7 +13,7 @@ use Laravel\Ai\Streaming\Events\ToolResult;
 final class UpdateStreamDataFromAiEvent
 {
     /**
-     * @return array{text: string, thinking: string, toolCalls: array<int, array<string, mixed>>, toolResults: array<int, array<string, mixed>>, currentChunkType: string}
+     * @return array{text: string, thinking: string, toolCalls: list<array<string, mixed>>, currentChunkType: string}
      */
     public function initial(): array
     {
@@ -19,40 +21,33 @@ final class UpdateStreamDataFromAiEvent
             'text' => '',
             'thinking' => '',
             'toolCalls' => [],
-            'toolResults' => [],
             'currentChunkType' => 'text',
         ];
     }
 
     /**
-     * @param  array{text: string, thinking: string, toolCalls: array<int, array<string, mixed>>, toolResults: array<int, array<string, mixed>>, currentChunkType: string}  $streamData
-     * @return array{text: string, thinking: string, toolCalls: array<int, array<string, mixed>>, toolResults: array<int, array<string, mixed>>, currentChunkType: string}
+     * Fold a stream event into the turn so far, in the shape the AI SDK stores a finished turn in.
+     *
+     * @param  array{text: string, thinking: string, toolCalls: list<array<string, mixed>>, currentChunkType: string}  $streamData
+     * @return array{text: string, thinking: string, toolCalls: list<array<string, mixed>>, currentChunkType: string}
      */
     public function handle(array $streamData, StreamEvent $event): array
     {
-        if ($event instanceof TextDelta) {
+        if ($event instanceof StreamStart && trim($streamData['text']) !== '') {
+            $streamData['text'] .= "\n\n";
+        } elseif ($event instanceof TextDelta) {
             $streamData['text'] .= $event->delta;
         } elseif ($event instanceof ReasoningDelta) {
             $streamData['thinking'] .= $event->delta;
         } elseif ($event instanceof ToolCall) {
-            $streamData['toolCalls'][] = [
-                'id' => $event->toolCall->id,
-                'name' => $event->toolCall->name,
-                'arguments' => $event->toolCall->arguments,
-                'resultId' => $event->toolCall->resultId,
-                'reasoningId' => $event->toolCall->reasoningId,
-                'reasoningSummary' => $event->toolCall->reasoningSummary,
-            ];
+            $streamData['toolCalls'][] = Arr::only($event->toolCall->toArray(), ['id', 'name', 'arguments']);
         } elseif ($event instanceof ToolResult) {
-            $streamData['toolResults'][] = [
-                'id' => $event->toolResult->id,
-                'name' => $event->toolResult->name,
-                'arguments' => $event->toolResult->arguments,
-                'result' => $event->toolResult->result,
-                'resultId' => $event->toolResult->resultId,
-                'successful' => $event->successful,
-                'error' => $event->error,
-            ];
+            $streamData['toolCalls'] = array_map(
+                fn (array $toolCall): array => $toolCall['id'] === $event->toolResult->id
+                    ? [...$toolCall, ...Arr::only($event->toolResult->toArray(), ['result', 'denied', 'failed'])]
+                    : $toolCall,
+                $streamData['toolCalls'],
+            );
         }
 
         $streamData['currentChunkType'] = $event->type();

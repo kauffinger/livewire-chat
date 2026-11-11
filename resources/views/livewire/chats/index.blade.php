@@ -5,7 +5,7 @@
                 {{ __('All Conversations') }}
             </flux:heading>
 
-            <flux:button wire:click="createNewConversation" icon="plus" variant="primary">
+            <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary">
                 {{ __('New Conversation') }}
             </flux:button>
         </div>
@@ -64,7 +64,7 @@
                 <flux:text class="mb-6 text-zinc-400 dark:text-zinc-500">
                     {{ __('Start your first conversation by creating a new one.') }}
                 </flux:text>
-                <flux:button wire:click="createNewConversation" icon="plus" variant="primary">
+                <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary">
                     {{ __('Create Your First Conversation') }}
                 </flux:button>
             </div>

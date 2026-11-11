@@ -27,16 +27,14 @@ it('shows conversations', function (): void {
         ->assertSeeHtml('wire:click="gotoPage(2, \'page\')"');
 });
 
-it('creates new conversation and redirects', function (): void {
+it('links to a new conversation', function (): void {
     $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create();
+
     actingAs($user);
 
     livewire(Index::class)
-        ->call('createNewConversation')
-        ->assertRedirect();
-
-    expect($user->conversations)->toHaveCount(1)
-        ->and($user->conversations()->first()->title)->toBe('New chat');
+        ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
 it('displays conversation metadata', function (): void {
@@ -98,7 +96,7 @@ it('shows empty state with create button when no conversations', function (): vo
         ->assertSeeText('No conversations yet')
         ->assertSeeText('Start your first conversation by creating a new one.')
         ->assertSeeText('Create Your First Conversation')
-        ->assertSeeHtml('wire:click="createNewConversation"');
+        ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
 it('shows all conversation action buttons', function (): void {
