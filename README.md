@@ -5,7 +5,7 @@
 [![Linter Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/lint.yml?branch=main&label=linter&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Alint+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/kauffinger/livewire-chat-kit.svg?style=flat-square)](https://packagist.org/packages/kauffinger/livewire-chat-kit)
 
-A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and [Prism](https://github.com/prism-php/prism). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
+A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and the [Laravel AI SDK](https://laravel.com/docs/ai-sdk). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
 
 This starter kit provides a clean, simple foundation for creating chat applications. It's designed to get you sending your first chat messages to an LLM instantly.
 
@@ -13,18 +13,18 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 
 ### Chat System
 
-- **Multi-Chat Management:** Create, manage, and navigate between multiple chat conversations
-- **Chat Sidebar:** Quick access to recent chats with intelligent navigation
-- **Chat Sharing:** Share conversations publicly or keep them private with visibility controls
-- **Model Selection:** Choose from different LLM models (GPT-4o, GPT-4o-mini, etc.) per chat
-- **Persistent History:** All conversations are saved and accessible across sessions
+- **Multi-Conversation Management:** Create, manage, and navigate between multiple conversations
+- **Chat Sidebar:** Your recent conversations grouped by date, in a sidebar that collapses to a rail and stays in place while you navigate
+- **Conversation Search:** Find any conversation by its title
+- **Persistent History:** Conversations are stored by the AI SDK and accessible across sessions
 
 ### LLM Integration
 
 - **Livewire-Powered:** Build dynamic interfaces with PHP.
 - **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
-- **Prism Integration:** The Laravel-way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
-- **Tool Support:** Built-in LLM tool calling with visual feedback and result display
+- **Laravel AI SDK:** The first-party way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
+- **Tool Support:** Built-in LLM tool calling with visual feedback
+- **Human Tool Approval:** Tools that change something wait for the user to approve or reject them
 
 ### UI & Design
 
@@ -51,149 +51,139 @@ After installation, make sure to:
 
 ### 1. Configure LLM Provider
 
-This starter kit uses [Prism](https://github.com/prism-php/prism) to interact with LLMs. By default, it's configured to use OpenAI's `gpt-4o-mini`. You'll need to add your API key to your `.env` file.
+This starter kit uses the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) to interact with LLMs. By default, it's configured to use OpenAI. You'll need to add your API key to your `.env` file.
 
 ```env
 OPENAI_API_KEY=your-openai-api-key
-# OPENAI_ORGANIZATION_ID= (optional)
 ```
 
-You can easily switch to other providers supported by Prism (like Anthropic) by modifying the `Chat.php` component. For example, to use Claude:
+The default provider is set in `config/ai.php`. You can switch the chat to another provider or model with attributes on the agent. For example, to use Claude:
 
 ```php
-// In app/Livewire/Chat.php
-// ...
-use Prism\Prism\Enums\Provider;
+// In app/Ai/Agents/ChatAgent.php
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Enums\Lab;
 
-// ...
-    public function runChatToolLoop(): void
-    {
-        $generator = Prism::text()
-            ->using(Provider::Anthropic, 'claude-3-opus-20240229') // Example for Claude
-            // ->using(Provider::OpenAI, 'gpt-4o-mini') // Default
-            ->withSystemPrompt('You are a helpful assistant.')
-            ->withMessages(collect($this->messages)->map->toPrism()->all())
-            ->asStream();
-        // ...
-    }
-// ...
+#[Provider(Lab::Anthropic)]
+#[Model('claude-sonnet-5')]
+class ChatAgent implements Agent, Conversational, HasTools
+{
+    // ...
+}
 ```
 
 Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_API_KEY`).
+
+To change the default provider without touching the agent, set `AI_PROVIDER` to any provider in `config/ai.php`. This is also how you point the chat at an OpenAI-compatible gateway or a local model server:
+
+```env
+AI_PROVIDER=openai-compatible
+OPENAI_COMPATIBLE_URL=https://your-gateway.example/v1
+OPENAI_COMPATIBLE_API_KEY=your-gateway-key
+OPENAI_COMPATIBLE_MODEL=your-model
+```
 
 ### 2. Explore the Chat Interface
 
 Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:
 
-- Create new chats from the sidebar
-- Switch between existing conversations
-- Share chats publicly or keep them private
-- Change the LLM model for each chat
+- Create new conversations from the sidebar
+- Switch between existing conversations, or search them by title
 - Use built-in tools (like the example sum calculator)
+- Ask the assistant to change the name on your profile, and approve or reject the tool call it asks for
 
 ## Architecture
 
 ### Core Components
 
-- **`app/Livewire/Chats/Index.php`** - Paginate over all of your chats
-- **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming, tool calls, and message management
-- **`app/Livewire/ChatSidebar.php`** - Chat navigation, history, and new chat creation
-- **`app/Models/Chat.php`** - Chat model with user relationships and visibility controls
-- **`app/Models/Message.php`** - Message model with tool call/result support and Prism integration
+- **`app/Ai/Agents/ChatAgent.php`** - The agent: instructions, tools, and conversation memory
+- **`app/Ai/Tools/Sum.php`** - Example tool the agent can call
+- **`app/Ai/Tools/UpdateProfileName.php`** - Example tool that needs the user's approval before it runs
+- **`app/Livewire/Chats/Index.php`** - Paginate over all of your conversations
+- **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
+- **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
+- **`app/Actions/UpdateStreamDataFromAiEvent.php`** - Folds the AI SDK's stream events into the data the UI renders
 
-### Business Logic Layer
-
-- **`app/Actions/`** - Clean action classes for complex operations:
-  - `AddNewUserMessageToChat` - Handles user message persistence
-  - `UpdateStreamDataFromPrismChunk` - Processes streaming LLM responses
-  - `PersistStreamDataToMessages` - Saves complete responses to database
-- **`app/Dtos/StreamData.php`** - Type-safe data transfer object for streaming
-- **`app/Policies/ChatPolicy.php`** - Authorization rules for chat access and sharing
+Conversations and messages belong to the AI SDK. The SDK creates a conversation and gives it a title when its first message is answered, the chat reads its history through the SDK's `ConversationStore`, and the `User` model lists its conversations with the SDK's `HasConversations` trait.
 
 ### UI Components
 
-- **Chat Interface:** Real-time streaming with markdown rendering
-- **Tool Results Display:** Visual feedback for LLM tool executions
-- **Model Selector:** Per-chat model configuration
-- **Sharing Controls:** Public/private visibility management
-- **Toast Notifications:** Built-in toast system for user feedback
+- **Chat Interface:** Real-time streaming with markdown rendering. Text is revealed at an even pace, new words fade in, and markdown that is still being written (half a bold word, link or table) is closed or hidden until it completes
+- **Status Row:** Shows "Thinking…", the tool that is running, and the latest line of reasoning when the model streams it
+- **Tool Calls Display:** Each tool call is a row that opens to show its arguments and result
+- **Tool Approval:** A tool call that needs approval takes the place of the message input until you approve or reject it
+- **Message Input:** Sits in the middle of a new conversation and docks to the bottom once it starts. It grows with the text, Enter sends and Shift+Enter starts a new line. While a reply streams, the send button becomes a stop button
+- **Code Blocks:** Show their language and a copy button
+- **Earlier Messages:** Loaded when you scroll to the top of a conversation
+- **Toast Notifications:** Flux toasts for user feedback
 
 ## How it Works
 
 ### Message Flow
 
 1. **User Input:** Message typed in chat interface and submitted
-2. **Message Processing:** `AddNewUserMessageToChat` action persists user message
-3. **LLM Streaming:** `runChatToolLoop()` initiates real-time streaming with Prism
-4. **Stream Handling:** `UpdateStreamDataFromPrismChunk` processes each chunk (text, tool calls, results)
-5. **UI Updates:** Livewire streams update the interface in real-time
-6. **Persistence:** `PersistStreamDataToMessages` saves complete conversation
+2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
+3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
+4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
+5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again. `resources/js/components/markdownProcessor.js` morphs the reply instead of replacing it, and `resources/js/completeMarkdown.js` repairs unfinished markdown. When the turn ends before the reveal has caught up, the stored message continues it
+6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
+7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
+8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
+
+Titles are written by the provider's cheapest model. Set `ai.conversations.generate_title` to `false` in `config/ai.php` to use the start of the first message instead.
 
 ### Tool Integration
 
-- **Tool Definitions:** Tools are defined in the `runChatToolLoop()` method
+- **Tool Definitions:** Tools live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`. Create new ones with `php artisan make:tool`
 - **Automatic Execution:** LLM can call tools during conversation flow
-- **Visual Feedback:** Tool calls and results are displayed with dedicated UI components
+- **Visual Feedback:** Tool calls are displayed while streaming and in the conversation history
+- **Approval:** A tool that implements the SDK's `Approvable` contract pauses the turn. The chat shows the call with its arguments and resumes the turn once the user approves or rejects it
 
 ### Technical Implementation
 
-- **UUID Models:** All models use UUIDs for security and scalability
-- **Policy Authorization:** Fine-grained access control with `ChatPolicy`
-- **Type Safety:** DTOs and strong typing throughout the application
-- **Testing:** Comprehensive Pest test suite with Livewire integration
+- **Ownership Checks:** Conversations can only be opened by the user they belong to
+- **Testing:** Comprehensive Pest test suite with Livewire integration and faked agents
 - **Code Quality:** Laravel Pint, Rector, and Prettier for consistent formatting
 
 ## Toast Notifications
 
-The chat kit includes a built-in toast notification system for user feedback.
-
-### Basic Setup
-
-Add the toast container to your layout (e.g., in `resources/views/layouts/app.blade.php`):
-
-```blade
-<x-toast position="bottom-right" />
-```
+Toasts are [Flux toasts](https://fluxui.dev/components/toast). The `<flux:toast />` element lives in `resources/views/components/layouts/app/sidebar.blade.php`.
 
 ### Usage in Livewire Components
 
 ```php
-// In your Livewire component - using named parameters
-$this->dispatch('toast',
+use Flux\Flux;
+
+Flux::toast(
     variant: 'success',
-    title: 'Success!',
-    description: 'Your changes have been saved.',
-    icon: 'check-circle',
-    duration: 3000
+    heading: 'Changes saved.',
+    text: 'You can always update this in your settings.',
 );
 ```
 
 ### Usage with Alpine.js
 
 ```blade
-<button
-  @click="$dispatch('toast', {
-    variant: 'success',
-    title: 'Success!',
-    description: 'Your changes have been saved.'
-})"
+<flux:button
+  x-on:click="
+    $flux.toast({
+      variant: 'success',
+      heading: 'Changes saved.',
+      text: 'You can always update this in your settings.',
+    })
+  "
 >
   Show Success Toast
-</button>
+</flux:button>
 ```
 
 ### Toast Options
 
-- `variant`: 'default' | 'success' | 'error' | 'danger' | 'warning' | 'info'
-- `title`: The main message
-- `description`: Additional details (optional)
-- `icon`: Icon name (optional, auto-set based on variant)
-- `dismissible`: Whether the toast can be dismissed (default: true)
-- `duration`: Auto-dismiss after milliseconds (default: 5000, use 0 to disable)
-
-### Container Positions
-
-- `position`: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' (default: 'bottom-right')
+- `variant`: 'success' | 'warning' | 'danger'
+- `heading`: The title (optional)
+- `text`: The message
+- `duration`: Auto-dismiss after milliseconds (default: 5000, use 0 to keep it open)
 
 ## Contributing
 

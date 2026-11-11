@@ -2,9 +2,10 @@
 
 namespace App\Livewire\Chats;
 
-use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,31 +13,22 @@ class Index extends Component
 {
     use WithPagination;
 
-    public function createNewChat(): void
+    #[Url]
+    public string $search = '';
+
+    public function updatedSearch(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $chat = $user->chats()->create([
-            'title' => __('New chat'),
-            'model' => 'gpt-4o-mini',
-        ]);
-
-        $this->redirectRoute('chat.show', ['chat' => $chat->id], navigate: true);
+        $this->resetPage();
     }
 
     public function render(): View
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        $chats = $user->chats()
-            ->withCount('messages')
-            ->latest('updated_at')
-            ->paginate(10);
-
         return view('livewire.chats.index', [
-            'chats' => $chats,
-        ]);
+            'conversations' => Auth::user()
+                ->conversations()
+                ->when($this->search !== '', fn (Builder $query) => $query->whereLike('title', "%{$this->search}%"))
+                ->latest('updated_at')
+                ->paginate(10),
+        ])->title(__('Conversations'));
     }
 }

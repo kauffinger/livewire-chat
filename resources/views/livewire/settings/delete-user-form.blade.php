@@ -1,17 +1,6 @@
-<section class="mt-10 space-y-6">
-    <div class="relative mb-5">
-        <flux:heading>{{ __('Delete account') }}</flux:heading>
-        <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>
-    </div>
-
+<x-settings.section :heading="__('Delete account')" :description="__('Delete your account and all of its resources')">
     <flux:modal.trigger name="confirm-user-deletion">
-        <flux:button
-            variant="danger"
-            x-data=""
-            x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-        >
-            {{ __('Delete account') }}
-        </flux:button>
+        <flux:button variant="danger">{{ __('Delete account') }}</flux:button>
     </flux:modal.trigger>
 
     <flux:modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
@@ -24,15 +13,15 @@
                 </flux:subheading>
             </div>
 
-            <flux:input wire:model="password" :label="__('Password')" type="password" />
+            <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
 
-            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+            <div class="flex justify-end gap-2">
                 <flux:modal.close>
-                    <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
 
                 <flux:button variant="danger" type="submit">{{ __('Delete account') }}</flux:button>
             </div>
         </form>
     </flux:modal>
-</section>
+</x-settings.section>

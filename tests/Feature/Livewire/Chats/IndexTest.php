@@ -1,121 +1,179 @@
 <?php
 
-use App\Models\Chat;
+use App\Livewire\Chats\Index;
 use App\Models\User;
+use Database\Factories\ConversationFactory;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 use function Pest\Livewire\livewire;
 
 it('mounts', function (): void {
     actingAs(User::factory()->create());
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
-        ->assertSeeText('No chats yet');
+        ->assertSeeText('No conversations yet');
 });
 
-it('shows chats', function (): void {
+it('shows conversations', function (): void {
     $user = User::factory()->create();
-    Chat::factory()->recycle($user)->count(20)->create();
+    ConversationFactory::new()->recycle($user)->count(20)->create(['title' => 'Test Title']);
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
-        ->assertSeeText($user->chats()->oldest()->first()->title)
+        ->assertSeeText('Test Title')
         ->assertSeeHtml('wire:click="gotoPage(2, \'page\')"');
 });
 
-it('creates new chat and redirects', function (): void {
+it('links to a new conversation', function (): void {
     $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create();
+
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
-        ->call('createNewChat')
-        ->assertRedirect(route('chat.show', $user->chats()->latest()->first()));
-
-    expect($user->chats)->toHaveCount(1)
-        ->and($user->chats()->first()->title)->toBe('New chat')
-        ->and($user->chats()->first()->model)->toBe('gpt-4o-mini');
+    livewire(Index::class)
+        ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
-it('displays chat metadata', function (): void {
+it('displays conversation metadata', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create([
+    $conversation = ConversationFactory::new()->recycle($user)->create([
         'created_at' => now()->subDays(5),
         'updated_at' => now()->subHours(2),
     ]);
 
-    // Add messages to get accurate count
-    $chat->messages()->createMany([
-        ['role' => 'user', 'parts' => ['text' => 'Hello'], 'attachments' => []],
-        ['role' => 'assistant', 'parts' => ['text' => 'Hi there'], 'attachments' => []],
-        ['role' => 'user', 'parts' => ['text' => 'How are you?'], 'attachments' => []],
-    ]);
-
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
-        ->assertSeeText($chat->title)
-        ->assertSeeText('5 days ago') // created_at
-        ->assertSeeText('2 hours ago') // updated_at
-        ->assertSeeText('3'); // messages_count
+        ->assertSeeText($conversation->title)
+        ->assertSeeText('2 hours ago')
+        ->assertDontSeeText('5 days ago');
 });
 
-it('shows chats in descending order by updated_at', function (): void {
+it('shows conversations in descending order by updated_at', function (): void {
     $user = User::factory()->create();
-    $oldChat = Chat::factory()->recycle($user)->create([
-        'title' => 'Old Chat',
+    ConversationFactory::new()->recycle($user)->create([
+        'title' => 'Old Conversation',
         'updated_at' => now()->subDays(10),
     ]);
-    $recentChat = Chat::factory()->recycle($user)->create([
-        'title' => 'Recent Chat',
+    ConversationFactory::new()->recycle($user)->create([
+        'title' => 'Recent Conversation',
         'updated_at' => now(),
     ]);
 
     actingAs($user);
 
-    $response = livewire(\App\Livewire\Chats\Index::class);
+    $response = livewire(Index::class);
 
-    // Recent chat should appear before old chat
+    // Recent conversation should appear before old conversation
     $htmlContent = $response->html();
-    $recentChatPosition = strpos($htmlContent, 'Recent Chat');
-    $oldChatPosition = strpos($htmlContent, 'Old Chat');
+    $recentPosition = strpos($htmlContent, 'Recent Conversation');
+    $oldPosition = strpos($htmlContent, 'Old Conversation');
 
-    expect($recentChatPosition)->toBeLessThan($oldChatPosition);
+    expect($recentPosition)->toBeLessThan($oldPosition);
 });
 
-it('paginates chats with 10 per page', function (): void {
+it('paginates conversations with 10 per page', function (): void {
     $user = User::factory()->create();
-    Chat::factory()->recycle($user)->count(15)->create();
+    ConversationFactory::new()->recycle($user)->count(15)->create();
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
         ->assertSeeHtml('wire:click="gotoPage(2, \'page\')"')
         ->assertDontSeeHtml('wire:click="gotoPage(3, \'page\')"');
 });
 
-it('shows empty state with create button when no chats', function (): void {
+it('shows empty state with create button when no conversations', function (): void {
     $user = User::factory()->create();
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
-        ->assertSeeText('No chats yet')
-        ->assertSeeText('Start your first conversation by creating a new chat.')
-        ->assertSeeText('Create Your First Chat')
-        ->assertSeeHtml('wire:click="createNewChat"');
+        ->assertSeeText('No conversations yet')
+        ->assertSeeText('Every conversation you start is kept here.')
+        ->assertSeeText('New conversation')
+        ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
-it('shows all chat action buttons', function (): void {
+it('shows all conversation action buttons', function (): void {
     $user = User::factory()->create();
-    $chat = Chat::factory()->recycle($user)->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
     actingAs($user);
 
-    livewire(\App\Livewire\Chats\Index::class)
+    livewire(Index::class)
         ->assertOk()
-        ->assertSeeText('Open')
-        ->assertSeeHtml('href="'.route('chat.show', $chat->id).'"')
+        ->assertSeeHtml('href="'.route('conversation.show', $conversation->id).'"')
         ->assertSeeHtml('wire:navigate.hover');
+});
+
+it('renders the conversations page', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Test Title']);
+
+    actingAs($user);
+
+    get(route('conversations.index'))
+        ->assertOk()
+        ->assertSeeLivewire(Index::class)
+        ->assertSeeText('Test Title');
+});
+
+it('only lists the conversations of the current user', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Mine']);
+    ConversationFactory::new()->create(['title' => 'Somebody else\'s']);
+
+    actingAs($user);
+
+    livewire(Index::class)
+        ->assertSeeText('Mine')
+        ->assertDontSeeText('Somebody else\'s');
+});
+
+it('finds conversations by a part of their title', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Planning the garden']);
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Tax return questions']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->set('search', 'garden')
+        ->assertSeeText('Planning the garden')
+        ->assertDontSeeText('Tax return questions');
+});
+
+it('says so when no title matches the search', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Planning the garden']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->set('search', 'spaceship')
+        ->assertSeeText('No conversations found')
+        ->assertDontSeeText('No conversations yet')
+        ->assertDontSeeText('Planning the garden');
+});
+
+it('goes back to the first page when the search changes', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->count(11)->create(['title' => 'Planning the garden']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->call('gotoPage', 2)
+        ->set('search', 'garden')
+        ->assertSet('paginators.page', 1);
+});
+
+it('does not search the conversations of other users', function (): void {
+    ConversationFactory::new()->create(['title' => 'Planning the garden']);
+    actingAs(User::factory()->create());
+
+    livewire(Index::class)
+        ->set('search', 'garden')
+        ->assertDontSeeText('Planning the garden');
 });

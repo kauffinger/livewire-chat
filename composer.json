@@ -2,41 +2,39 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "kauffinger/livewire-chat-kit",
     "type": "project",
-    "description": "A clean streamed chat kit for Laravel Livewire. Built with FluxUI & Prism.",
+    "description": "A clean streamed chat kit for Laravel Livewire. Built with FluxUI & the Laravel AI SDK.",
     "keywords": [
         "laravel",
         "livewire",
         "llms",
-        "prism",
+        "ai-sdk",
         "fluxui",
         "chat"
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "laravel/ai": "^0.1.2",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1",
-        "livewire/flux": "^2.11.1",
-        "livewire/livewire": "^4.1.2",
-        "prism-php/prism": "^0.99.19",
-        "symfony/http-foundation": "^7.4.0"
+        "php": "^8.4",
+        "laravel/ai": "^1.3",
+        "laravel/framework": "^13.0",
+        "laravel/tinker": "^3.0",
+        "livewire/flux": "^2.21",
+        "livewire/livewire": "^4.4"
     },
     "require-dev": {
-        "calebdw/larastan-livewire": "^2.0",
-        "driftingly/rector-laravel": "^2.0",
-        "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^3.1",
-        "laravel/boost": "^2.0",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.18",
-        "laravel/sail": "^1.41",
+        "calebdw/larastan-livewire": "^2.6",
+        "driftingly/rector-laravel": "^2.7",
+        "fakerphp/faker": "^1.24",
+        "larastan/larastan": "^3.14",
+        "laravel/boost": "^2.10",
+        "laravel/pail": "^1.2",
+        "laravel/pint": "^1.32",
+        "laravel/sail": "^1.69",
         "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "pestphp/pest-plugin-livewire": "^4.1",
-        "rector/rector": "^2.0"
+        "nunomaduro/collision": "^8.9",
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-livewire": "^5.0",
+        "rector/rector": "^2.8"
     },
     "autoload": {
         "psr-4": {
@@ -97,6 +95,11 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "policy": {
+            "cooldown": {
+                "period": "7 days"
+            }
         }
     },
     "minimum-stability": "stable",

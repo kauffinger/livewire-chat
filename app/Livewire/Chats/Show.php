@@ -2,162 +2,206 @@
 
 namespace App\Livewire\Chats;
 
-use App\Actions\AddNewUserMessageToChat;
-use App\Actions\PersistStreamDataToMessages;
-use App\Actions\UpdateStreamDataFromPrismChunk;
-use App\Dtos\StreamData;
-use App\Enums\Visibility;
-use App\Models\Chat as ChatModel;
+use App\Actions\UpdateStreamDataFromAiEvent;
+use App\Ai\Agents\ChatAgent;
 use Flux\Flux;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Laravel\Ai\Approvals\Decision;
+use Laravel\Ai\Approvals\Decisions;
+use Laravel\Ai\Approvals\PendingApproval;
+use Laravel\Ai\Contracts\ConversationStore;
+use Laravel\Ai\Enums\MessageStatus;
+use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Storage\StoredMessage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Facades\Prism;
-use Prism\Prism\Facades\Tool;
-use Prism\Prism\Text\PendingRequest;
+use Throwable;
 
 class Show extends Component
 {
-    public ChatModel $chat;
+    #[Locked]
+    public ?string $conversationId = null;
+
+    #[Locked]
+    public ?string $title = null;
 
     public string $newMessage = '';
 
-    public string $model = 'gpt-4o-mini';
+    #[Locked]
+    public string $pendingMessage = '';
 
-    public function mount(ChatModel $chat): void
+    #[Locked]
+    public int $messagesPerPage = 20;
+
+    #[Locked]
+    public int $streamedTurns = 0;
+
+    public function mount(?Conversation $conversation = null): void
     {
-        Gate::authorize('view', $chat);
+        abort_unless($conversation === null || $conversation->participant?->is(Auth::user()), 403);
 
-        $this->chat = $chat;
-
-        $this->model = $this->chat->model ?? 'gpt-4o-mini';
+        $this->conversationId = $conversation?->id;
+        $this->title = $conversation?->title;
     }
 
+    /**
+     * @return CursorPaginator<int, StoredMessage>|null
+     */
+    #[Computed]
+    public function history(): ?CursorPaginator
+    {
+        if ($this->conversationId === null) {
+            return null;
+        }
+
+        return resolve(ConversationStore::class)
+            ->paginateConversationMessages($this->conversationId, $this->messagesPerPage);
+    }
+
+    /**
+     * @return list<array{id: string, role: string, content: string, thinking: string, toolCalls: list<array<string, mixed>>, failed: bool}>
+     */
     #[Computed]
     public function messages(): array
     {
-        return $this->chat->messages()->oldest()
-            ->get()
+        return collect($this->history?->items())
+            ->reverse()
+            ->map(fn (StoredMessage $message): array => [
+                'id' => $message->id,
+                'role' => $message->role,
+                'content' => $message->content,
+                'thinking' => collect($message->steps)->pluck('reasoning')->filter()->implode("\n\n"),
+                'toolCalls' => $message->toolCalls(),
+                'failed' => $message->status === MessageStatus::Failed,
+            ])
+            ->values()
             ->all();
     }
 
-    public function sendMessage(AddNewUserMessageToChat $addNewUserMessageToChat): void
+    /**
+     * @return list<PendingApproval>
+     */
+    #[Computed]
+    public function pendingApprovals(): array
     {
-        Gate::authorize('update', $this->chat);
+        if ($this->conversationId === null) {
+            return [];
+        }
 
-        $userMessage = trim($this->newMessage);
+        return resolve(ConversationStore::class)->pendingApprovalsFor($this->conversationId);
+    }
 
-        if ($userMessage === '') {
+    public function showEarlierMessages(): void
+    {
+        $this->messagesPerPage += 20;
+    }
+
+    public function sendMessage(): void
+    {
+        $message = trim($this->newMessage);
+
+        if ($message === '' || $this->pendingApprovals !== []) {
             return;
         }
 
-        $addNewUserMessageToChat->handle($this->chat, $userMessage);
-
+        $this->pendingMessage = $message;
         $this->newMessage = '';
 
-        $this->js('$wire.runChatToolLoop()');
+        $this->js('$wire.runAgent()');
     }
 
-    public function runChatToolLoop(
-        PersistStreamDataToMessages $persistStreamDataToMessages,
-        UpdateStreamDataFromPrismChunk $updateStreamDataFromPrismChunk,
-    ): void {
-        Gate::authorize('update', $this->chat);
-
-        $generator = Prism::text()
-            ->using(Provider::OpenAI, $this->model)
-            ->withSystemPrompt('You are a helpful assistant.')
-            ->withMessages(collect($this->messages)->map->toPrism()->all())
-            ->withMaxSteps(5)
-            ->withTools([
-                Tool::as('sum')->withNumberParameter('a', 'The first number to sum')
-                    ->withNumberParameter('b', 'The second number to sum')
-                    ->for('Sums two numbers together')
-                    ->using(fn ($a, $b) => (string) ($a + $b)),
-            ])
-            ->whenProvider(Provider::OpenAI, fn (PendingRequest $request) => match ($this->model) {
-                'gpt-4o',
-                'gpt-4o-mini',
-                'gpt-3.5-turbo',
-                'gpt-4',
-                'gpt-4.1-nano-2025-04-14' => $request,
-                default => $request->withProviderOptions([
-                    'reasoning' => ['effort' => 'medium', 'summary' => 'auto'],
-                ]),
-            })
-            ->asStream();
-
-        $streamData = new StreamData;
-
-        foreach ($generator as $event) {
-
-            $updateStreamDataFromPrismChunk->handle($streamData, $event);
-
-            $this->stream(
-                json_encode([...$streamData->toArray(), 'currentChunkType' => $event->type()->value]),
-                true,
-                to: 'streamed-message',
-            );
+    public function runAgent(): void
+    {
+        if ($this->pendingMessage === '') {
+            return;
         }
 
-        $persistStreamDataToMessages->handle($this->chat, $streamData);
-
-        unset($this->messages);
+        $this->streamAgent($this->pendingMessage);
     }
 
-    public function share(): void
+    public function stopAgent(): void
     {
-        Gate::authorize('update', $this->chat);
+        if ($this->pendingMessage === '') {
+            return;
+        }
 
-        $this->chat->update([
-            'visibility' => Visibility::Public->value,
-        ]);
-
-        Flux::modal('confirm-share')->close();
-        $this->dispatch(
-            'toast',
-            variant: 'success',
-            title: 'Success',
-            description: 'Chat is public.',
-            icon: 'check-circle',
-            duration: 3000
-        );
+        $this->newMessage = $this->pendingMessage;
+        $this->pendingMessage = '';
+        $this->streamedTurns++;
     }
 
-    public function unshare(): void
+    public function approveToolCalls(): void
     {
-        Gate::authorize('update', $this->chat);
+        if ($this->pendingApprovals === []) {
+            return;
+        }
 
-        $this->chat->update([
-            'visibility' => Visibility::Private->value,
-        ]);
-
-        Flux::modal('confirm-unshare')->close();
-        $this->dispatch(
-            'toast',
-            variant: 'success',
-            title: 'Success',
-            description: 'Chat is private.',
-            icon: 'check-circle',
-            duration: 3000
-        );
+        $this->streamAgent(Decision::approveAll());
     }
 
-    public function setModel(string $value): void
+    public function rejectToolCalls(): void
     {
-        Gate::authorize('update', $this->chat);
+        if ($this->pendingApprovals === []) {
+            return;
+        }
 
-        $this->model = $value;
-
-        $this->chat->update([
-            'model' => $value,
-        ]);
+        $this->streamAgent(Decision::rejectAll(__('The user declined this action.')));
     }
 
     public function render(): View
     {
-        return view('livewire.chats.show');
+        return view('livewire.chats.show')->title($this->title ?? __('New conversation'));
+    }
+
+    protected function streamAgent(Decisions|string $prompt): void
+    {
+        $stream = ChatAgent::make()
+            ->continueOrStart($this->conversationId, as: Auth::user())
+            ->stream($prompt);
+
+        $updateStreamData = new UpdateStreamDataFromAiEvent;
+        $streamData = $updateStreamData->initial();
+
+        try {
+            foreach ($stream as $event) {
+                $streamData = $updateStreamData->handle($streamData, $event);
+
+                // wire:stream writes its content to the page as HTML, so the tags in the reply must stay escaped.
+                $this->stream(
+                    json_encode($streamData, JSON_HEX_TAG | JSON_HEX_AMP),
+                    true,
+                    to: 'streamed-message',
+                );
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->newMessage = $this->pendingMessage;
+
+            Flux::toast(
+                variant: 'danger',
+                heading: __('The assistant could not respond.'),
+                text: __('Please try again.'),
+            );
+
+            return;
+        } finally {
+            $this->pendingMessage = '';
+            $this->streamedTurns++;
+
+            unset($this->history, $this->messages, $this->pendingApprovals);
+            $this->renderIsland('messages');
+        }
+
+        if ($this->conversationId === null) {
+            $this->redirectRoute('conversation.show', $stream->conversationId, navigate: true);
+
+            return;
+        }
+
+        $this->dispatch('conversation-updated');
     }
 }

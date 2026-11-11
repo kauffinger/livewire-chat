@@ -1,94 +1,155 @@
 @props([
-    'message' => null,
-    'isFirst' => false,
+    'message' => [],
     'isLoading' => false,
     'wireStream' => null,
     'wireReplace' => false,
-    'showHeading' => true,
-    'thinkingButtonText' => '🧠',
-    'thinkingProseSize' => 'prose-sm',
 ])
 
-<div class="@if ($isFirst) flex-1 @endif flex w-full flex-row justify-start">
-    <div
-        class="prose prose-sm max-h-fit max-w-fit min-w-24 space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700"
-        x-data="markdownProcessor()"
-    >
-        @if ($showHeading)
-            <flux:heading>AI</flux:heading>
-        @endif
+@php
+    $disclosureClasses = 'flex items-center gap-2 rounded-md text-sm text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white';
+    $detailClasses = 'min-w-0 font-mono text-[0.8125rem] leading-6 break-words whitespace-pre-wrap text-zinc-800 dark:text-zinc-200';
+@endphp
 
-        @if ($isLoading)
-            <!-- Thinking indicator -->
-            <div x-show="isCurrentlyThinking()" class="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-                <div class="flex space-x-1">
-                    <div class="h-1 w-1 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.3s]"></div>
-                    <div class="h-1 w-1 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.15s]"></div>
-                    <div class="h-1 w-1 animate-bounce rounded-full bg-zinc-400"></div>
-                </div>
-                <span class="text-sm">Thinking...</span>
-            </div>
+<div
+    class="w-full space-y-3"
+    x-data="markdownProcessor(@js(['copy' => __('Copy'), 'copied' => __('Copied'), 'thinking' => __('Thinking…'), 'runningTool' => __('Running :tool…')]), @js($isLoading))"
+    x-on:click="copyCode($event)"
+>
+    <div x-show="hasThinking()">
+        <button
+            type="button"
+            class="{{ $disclosureClasses }}"
+            x-on:click="toggleThinking()"
+            x-bind:aria-expanded="showThinking"
+        >
+            <flux:icon.light-bulb variant="mini" />
+            <span>{{ __('Reasoning') }}</span>
+            <flux:icon.chevron-right
+                variant="micro"
+                class="transition-transform"
+                x-bind:class="showThinking && 'rotate-90'"
+            />
+        </button>
 
-            <!-- Tool usage indicator -->
-            <div x-show="isCurrentlyUsingTools()" class="flex items-center gap-2 text-blue-500 dark:text-blue-400">
-                <flux:icon.wrench-screwdriver class="h-4 w-4 animate-spin" />
-                <span class="text-sm">Using tools...</span>
-            </div>
-        @endif
-
-        <!-- Thinking preview (collapsible) -->
-        <div x-show="hasThinking()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-            <button
-                @click="toggleThinking()"
-                class="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
-            >
-                <flux:icon.chevron-right x-show="!showThinking" class="h-3 w-3" />
-                <flux:icon.chevron-down x-show="showThinking" class="h-3 w-3" />
-                {{ $thinkingButtonText }}
-            </button>
-            <div x-show="showThinking" x-collapse class="mt-2">
-                <div class="rounded bg-zinc-100 p-2 text-xs dark:bg-zinc-800">
-                    <article
-                        wire:ignore
-                        class="prose prose-zinc {{ $thinkingProseSize }} prose-p:m-0 prose-code:font-mono prose-pre:text-xs dark:prose-invert max-w-none break-words"
-                        x-html="thinkingHtml"
-                    ></article>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tool calls display -->
-        <div x-show="hasToolCalls()" class="border-t border-zinc-200 pt-2 dark:border-zinc-600">
-            <template x-for="toolCall in streamData.toolCalls" :key="toolCall.toolCallResultId">
-                <div class="mt-1 flex items-center gap-2 text-xs">
-                    <flux:icon.wrench-screwdriver class="h-3 w-3 text-blue-500" />
-                    <span x-text="toolCall.name" class="font-mono text-blue-600 dark:text-blue-400"></span>
-                </div>
-            </template>
-        </div>
-
-        <!-- Main content -->
-        <flux:text>
-            <span
-                x-ref="raw"
-                class="hidden"
-                @if ($wireStream)
-                    wire:stream="{{ $wireStream }}"
-                @endif
-                @if ($wireReplace)
-                    wire:replace
-                @endif
-            >
-                {{ $isLoading ? '' : json_encode($message->parts) }}
-            </span>
+        <div x-show="showThinking" x-collapse>
             <article
                 wire:ignore
-                class="prose prose-zinc prose-sm prose-p:m-0 prose-code:font-mono prose-pre:border prose-pre:border-zinc-200 prose-pre:dark:border-zinc-600 prose-pre:rounded-md prose-pre:p-4 prose-pre:mb-1 prose-pre:bg-zinc-100 prose-pre:dark:bg-zinc-800 prose-pre:text-zinc-900 prose-pre:dark:text-zinc-100 dark:prose-invert max-w-none min-w-0 overflow-hidden break-words"
-                x-html="html"
-                @if ($isLoading)
-                    x-show="html.length > 0"
-                @endif
+                class="prose prose-sm prose-zinc prose-chat dark:prose-invert max-w-none pt-2 text-zinc-500 dark:text-zinc-400"
+                x-html="thinkingHtml"
             ></article>
-        </flux:text>
+        </div>
     </div>
+
+    <div x-show="hasToolCalls()" class="space-y-2">
+        <template x-for="toolCall in streamData.toolCalls" :key="toolCall.id">
+            <div x-data="{ isOpen: false }">
+                <button
+                    type="button"
+                    class="{{ $disclosureClasses }}"
+                    x-on:click="isOpen = ! isOpen"
+                    x-bind:aria-expanded="isOpen"
+                >
+                    @if ($isLoading)
+                        <flux:icon.loading class="size-5" x-show="! ('result' in toolCall)" />
+                    @else
+                        <flux:icon.wrench-screwdriver variant="mini" x-show="! ('result' in toolCall)" />
+                    @endif
+                    <flux:icon.check-circle
+                        variant="mini"
+                        class="text-green-600 dark:text-green-400"
+                        x-show="'result' in toolCall && ! toolCall.denied && ! toolCall.failed"
+                    />
+                    <flux:icon.x-circle
+                        variant="mini"
+                        class="text-red-600 dark:text-red-400"
+                        x-show="toolCall.denied || toolCall.failed"
+                    />
+                    <span class="font-mono" x-text="toolCall.name"></span>
+                    <flux:icon.chevron-right
+                        variant="micro"
+                        class="transition-transform"
+                        x-bind:class="isOpen && 'rotate-90'"
+                    />
+                </button>
+
+                <div x-show="isOpen" x-collapse>
+                    <dl
+                        class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm dark:bg-zinc-900/40"
+                    >
+                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Arguments') }}</dt>
+                        <dd class="{{ $detailClasses }}" x-text="JSON.stringify(toolCall.arguments)"></dd>
+
+                        <dt class="text-zinc-500 dark:text-zinc-400" x-show="'result' in toolCall">
+                            {{ __('Result') }}
+                        </dt>
+                        <dd
+                            class="{{ $detailClasses }}"
+                            x-show="'result' in toolCall"
+                            x-text="formatToolResult(toolCall.result)"
+                        ></dd>
+                    </dl>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <span
+        x-ref="raw"
+        class="hidden"
+        @if ($wireStream)
+            wire:stream="{{ $wireStream }}"
+        @endif
+        @if ($wireReplace)
+            wire:replace
+        @endif
+    >
+        {{ $isLoading ? '' : json_encode(['text' => $message['content'] ?? '', 'thinking' => $message['thinking'] ?? '', 'toolCalls' => $message['toolCalls'] ?? []]) }}
+    </span>
+    <article
+        wire:ignore
+        class="prose prose-zinc prose-chat dark:prose-invert max-w-none min-w-0"
+        x-ref="reply"
+        x-show="html.length > 0"
+        @if ($isLoading)
+            data-reveal
+        @endif
+    ></article>
+
+    @if ($isLoading)
+        <div
+            role="status"
+            class="flex min-w-0 items-center gap-2.5 text-zinc-500 dark:text-zinc-400"
+            x-show="! isWriting() || html.length === 0"
+        >
+            <span class="motion-safe:animate-status-pulse size-2.5 shrink-0 rounded-full bg-current"></span>
+            <template x-for="label in [status()]" :key="label">
+                <span class="motion-safe:animate-status-in shrink-0 font-medium" x-text="label"></span>
+            </template>
+            <span class="min-w-0 truncate" x-show="latestThought() !== ''" x-text="latestThought()"></span>
+        </div>
+    @endif
+
+    @if ($message['failed'] ?? false)
+        <flux:callout
+            variant="danger"
+            icon="exclamation-triangle"
+            :heading="__('The assistant could not finish this response.')"
+        />
+    @endif
+
+    @unless ($isLoading)
+        <flux:button
+            size="xs"
+            variant="ghost"
+            square
+            class="-ms-1 text-zinc-400! hover:text-zinc-800! dark:hover:text-white!"
+            :tooltip="__('Copy')"
+            aria-label="{{ __('Copy') }}"
+            x-show="streamData.text.trim() !== ''"
+            x-on:click="copy()"
+        >
+            <flux:icon.clipboard variant="micro" x-show="! copied" />
+            <flux:icon.check variant="micro" x-show="copied" class="text-green-600 dark:text-green-400" />
+        </flux:button>
+    @endunless
 </div>

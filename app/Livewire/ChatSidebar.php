@@ -2,45 +2,41 @@
 
 namespace App\Livewire;
 
-use App\Models\Chat as ChatModel;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Laravel\Ai\Models\Conversation;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ChatSidebar extends Component
 {
-    public ?string $activeChatId = null;
-
-    public function mount(): void
-    {
-        $this->activeChatId = request()->route('chat')?->id;
-    }
-
+    /**
+     * @return Collection<string, Collection<int, Conversation>>
+     */
     #[Computed]
-    public function chats(): array
+    public function conversationGroups(): Collection
     {
-        return Auth::user()
-            ?->chats()
+        $conversations = Auth::user()
+            ?->conversations()
             ->latest('updated_at')
-            ->limit(5)
-            ->get()
-            ->map(fn (ChatModel $chat) => [
-                'id' => $chat->id,
-                'title' => (string) Str::limit($chat->title, 20),
-            ])
-            ->all() ?? [];
+            ->limit(30)
+            ->get();
+
+        return collect($conversations)->groupBy(fn (Conversation $conversation): string => match (true) {
+            $conversation->updated_at->isToday() => __('Today'),
+            $conversation->updated_at->isYesterday() => __('Yesterday'),
+            $conversation->updated_at->gte(today()->subDays(7)) => __('Previous 7 days'),
+            default => __('Older'),
+        });
     }
 
-    public function createNewChat(): void
+    #[On('conversation-updated')]
+    #[On('profile-updated')]
+    public function refresh(): void
     {
-        $chat = Auth::user()->chats()->create([
-            'title' => __('New chat'),
-            'model' => 'gpt-4o-mini',
-        ]);
-
-        $this->redirect(route('chat.show', $chat), navigate: true);
+        unset($this->conversationGroups);
     }
 
     public function render(): View
