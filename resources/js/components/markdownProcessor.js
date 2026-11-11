@@ -40,6 +40,7 @@ export default function markdownProcessor() {
         },
         thinkingHtml: '',
         showThinking: false,
+        copied: false,
 
         init() {
             this.md = markdownit({
@@ -96,6 +97,14 @@ export default function markdownProcessor() {
                     this.thinkingHtml = this.md.render(this.streamData.thinking);
                 }
             }
+        },
+
+        async copy() {
+            await navigator.clipboard.writeText(this.streamData.text);
+
+            this.copied = true;
+
+            setTimeout(() => (this.copied = false), 2000);
         },
 
         toggleThinking() {

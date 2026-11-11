@@ -181,6 +181,16 @@ it('renders the new conversation page', function (): void {
         ->assertSeeText('What can I help you with?');
 });
 
+it('titles the page after the conversation', function (): void {
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create(['title' => 'Planning the offsite']);
+
+    actingAs($user);
+
+    get(route('conversation.show', $conversation))->assertSee('<title>Planning the offsite</title>', false);
+    get(route('conversation.create'))->assertSee('<title>New conversation</title>', false);
+});
+
 it('redirects guests from the new conversation page to the login page', function (): void {
     get(route('conversation.create'))->assertRedirect(route('login'));
 });

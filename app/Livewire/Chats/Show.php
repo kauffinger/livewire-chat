@@ -25,6 +25,9 @@ class Show extends Component
     #[Locked]
     public ?string $conversationId = null;
 
+    #[Locked]
+    public ?string $title = null;
+
     public string $newMessage = '';
 
     #[Locked]
@@ -41,6 +44,7 @@ class Show extends Component
         abort_unless($conversation === null || $conversation->participant?->is(Auth::user()), 403);
 
         $this->conversationId = $conversation?->id;
+        $this->title = $conversation?->title;
     }
 
     /**
@@ -138,7 +142,7 @@ class Show extends Component
 
     public function render(): View
     {
-        return view('livewire.chats.show');
+        return view('livewire.chats.show')->title($this->title ?? __('New conversation'));
     }
 
     protected function streamAgent(Decisions|string $prompt): void

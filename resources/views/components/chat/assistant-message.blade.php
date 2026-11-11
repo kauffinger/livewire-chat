@@ -7,7 +7,7 @@
 ])
 
 <div class="flex w-full gap-3" x-data="markdownProcessor()">
-    <flux:avatar size="sm" icon="sparkles" class="shrink-0" />
+    <flux:avatar size="sm" icon="sparkles" class="shrink-0 max-sm:hidden" aria-hidden="true" />
 
     <div class="min-w-0 flex-1 space-y-2 pt-1">
         @if ($isLoading)
@@ -28,7 +28,14 @@
         @endif
 
         <div x-show="hasThinking()">
-            <flux:button size="xs" variant="ghost" icon="light-bulb" x-on:click="toggleThinking()">
+            <flux:button
+                size="xs"
+                variant="ghost"
+                icon="light-bulb"
+                class="-ms-2"
+                x-on:click="toggleThinking()"
+                x-bind:aria-expanded="showThinking"
+            >
                 {{ __('Reasoning') }}
             </flux:button>
 
@@ -36,7 +43,7 @@
                 <div class="rounded-lg bg-zinc-100 p-3 text-xs dark:bg-zinc-900/50">
                     <article
                         wire:ignore
-                        class="prose prose-zinc {{ $thinkingProseSize }} prose-p:m-0 prose-code:font-mono prose-pre:text-xs dark:prose-invert max-w-none break-words"
+                        class="prose prose-zinc {{ $thinkingProseSize }} prose-chat dark:prose-invert"
                         x-html="thinkingHtml"
                     ></article>
                 </div>
@@ -75,7 +82,7 @@
         </span>
         <article
             wire:ignore
-            class="prose prose-zinc prose-sm prose-p:m-0 prose-code:font-mono prose-pre:border prose-pre:border-zinc-200 prose-pre:dark:border-zinc-600 prose-pre:rounded-md prose-pre:p-4 prose-pre:mb-1 prose-pre:bg-zinc-100 prose-pre:dark:bg-zinc-800 prose-pre:text-zinc-900 prose-pre:dark:text-zinc-100 dark:prose-invert max-w-none min-w-0 overflow-hidden break-words"
+            class="prose prose-zinc prose-sm prose-chat dark:prose-invert min-w-0"
             x-html="html"
             @if ($isLoading)
                 x-show="html.length > 0"
@@ -89,5 +96,21 @@
                 :heading="__('The assistant could not finish this response.')"
             />
         @endif
+
+        @unless ($isLoading)
+            <flux:button
+                size="xs"
+                variant="ghost"
+                square
+                class="-ms-1 text-zinc-400! hover:text-zinc-800! dark:hover:text-white!"
+                :tooltip="__('Copy')"
+                aria-label="{{ __('Copy') }}"
+                x-show="streamData.text.trim() !== ''"
+                x-on:click="copy()"
+            >
+                <flux:icon.clipboard variant="micro" x-show="! copied" />
+                <flux:icon.check variant="micro" x-show="copied" class="text-green-600 dark:text-green-400" />
+            </flux:button>
+        @endunless
     </div>
 </div>
