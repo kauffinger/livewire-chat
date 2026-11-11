@@ -12,7 +12,7 @@
 
 <div
     class="w-full space-y-3"
-    x-data="markdownProcessor({ copy: @js(__('Copy')), copied: @js(__('Copied')) })"
+    x-data="markdownProcessor(@js(['copy' => __('Copy'), 'copied' => __('Copied'), 'thinking' => __('Thinking…'), 'runningTool' => __('Running :tool…')]), @js($isLoading))"
     x-on:click="copyCode($event)"
 >
     <div x-show="hasThinking()">
@@ -108,15 +108,24 @@
     <article
         wire:ignore
         class="prose prose-zinc prose-chat dark:prose-invert max-w-none min-w-0"
-        x-html="html"
+        x-ref="reply"
         x-show="html.length > 0"
+        @if ($isLoading)
+            data-reveal
+        @endif
     ></article>
 
     @if ($isLoading)
-        <div role="status" class="flex items-center gap-2.5 text-zinc-500 dark:text-zinc-400" x-show="! isWriting()">
-            <span class="motion-safe:animate-status-pulse size-2.5 rounded-full bg-current"></span>
-            <span x-show="! isCurrentlyUsingTools()">{{ __('Thinking…') }}</span>
-            <span x-show="isCurrentlyUsingTools()">{{ __('Using tools…') }}</span>
+        <div
+            role="status"
+            class="flex min-w-0 items-center gap-2.5 text-zinc-500 dark:text-zinc-400"
+            x-show="! isWriting() || html.length === 0"
+        >
+            <span class="motion-safe:animate-status-pulse size-2.5 shrink-0 rounded-full bg-current"></span>
+            <template x-for="label in [status()]" :key="label">
+                <span class="motion-safe:animate-status-in shrink-0 font-medium" x-text="label"></span>
+            </template>
+            <span class="min-w-0 truncate" x-show="latestThought() !== ''" x-text="latestThought()"></span>
         </div>
     @endif
 

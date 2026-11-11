@@ -108,7 +108,8 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 
 ### UI Components
 
-- **Chat Interface:** Real-time streaming with markdown rendering
+- **Chat Interface:** Real-time streaming with markdown rendering. Text is revealed at an even pace, new words fade in, and markdown that is still being written (half a bold word, link or table) is closed or hidden until it completes
+- **Status Row:** Shows "Thinking…", the tool that is running, and the latest line of reasoning when the model streams it
 - **Tool Calls Display:** Each tool call is a row that opens to show its arguments and result
 - **Tool Approval:** A tool call that needs approval takes the place of the message input until you approve or reject it
 - **Message Input:** Sits in the middle of a new conversation and docks to the bottom once it starts. It grows with the text, Enter sends and Shift+Enter starts a new line. While a reply streams, the send button becomes a stop button
@@ -124,7 +125,7 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
 3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
 4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
-5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again
+5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again. `resources/js/components/markdownProcessor.js` morphs the reply instead of replacing it, and `resources/js/completeMarkdown.js` repairs unfinished markdown. When the turn ends before the reveal has caught up, the stored message continues it
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
 7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
 8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history

@@ -34,6 +34,14 @@
     --animate-message-in: message-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     --animate-status-pulse: status-pulse 1.4s ease-in-out infinite;
 
+    --animate-status-in: status-in 0.3s ease-out;
+
+    @keyframes status-in {
+        from {
+            opacity: 0;
+        }
+    }
+
     @keyframes status-pulse {
         50% {
             opacity: 0.4;
@@ -250,6 +258,16 @@ select:focus[data-flux-control] {
 
     & > :last-child {
         margin-bottom: 0;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        &[data-reveal] :is(.stream-word, .code-block) {
+            transition: opacity 0.5s ease-out;
+
+            @starting-style {
+                opacity: 0;
+            }
+        }
     }
 
     @variant dark {
