@@ -12,161 +12,66 @@
         >
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <!-- Fixed header with logo -->
-            <div class="flex-shrink-0">
-                <a
-                    href="{{ route('dashboard') }}"
-                    class="me-5 flex items-center space-x-2 rtl:space-x-reverse"
-                    wire:navigate
+            <a
+                href="{{ route('dashboard') }}"
+                class="me-5 flex shrink-0 items-center space-x-2 rtl:space-x-reverse"
+                wire:navigate
+            >
+                <x-app-logo />
+            </a>
+
+            <flux:navlist variant="outline" class="min-h-0 flex-1 overflow-y-auto">
+                <livewire:chat-sidebar />
+            </flux:navlist>
+
+            <flux:navlist variant="outline" class="shrink-0">
+                <flux:navlist.item
+                    icon="folder-git-2"
+                    icon:trailing="arrow-up-right"
+                    href="https://github.com/kauffinger/livewire-chat"
+                    target="_blank"
                 >
-                    <x-app-logo />
-                </a>
-            </div>
+                    {{ __('Repository') }}
+                </flux:navlist.item>
 
-            <!-- Scrollable chat section -->
-            <div class="min-h-0 flex-1 overflow-hidden">
-                <flux:navlist variant="outline" class="h-full">
-                    <livewire:chat-sidebar />
-                </flux:navlist>
-            </div>
+                <flux:navlist.item
+                    icon="book-open-text"
+                    icon:trailing="arrow-up-right"
+                    href="https://laravel.com/docs/ai-sdk"
+                    target="_blank"
+                >
+                    {{ __('AI SDK documentation') }}
+                </flux:navlist.item>
+            </flux:navlist>
 
-            <!-- Fixed footer with links and user menu -->
-            <div class="flex-shrink-0">
-                <flux:navlist variant="outline">
-                    <flux:navlist.item
-                        icon="folder-git-2"
-                        href="https://github.com/laravel/livewire-starter-kit"
-                        target="_blank"
-                    >
-                        {{ __('Repository') }}
-                    </flux:navlist.item>
-
-                    <flux:navlist.item
-                        icon="book-open-text"
-                        href="https://laravel.com/docs/starter-kits#livewire"
-                        target="_blank"
-                    >
-                        {{ __('Documentation') }}
-                    </flux:navlist.item>
-                </flux:navlist>
-            </div>
-
-            <!-- Desktop User Menu -->
-            <flux:dropdown position="bottom" align="start">
+            <flux:dropdown position="bottom" align="start" class="shrink-0">
                 <flux:profile
-                    name="{{ auth()->user()->name ?? 'Guest' }}"
-                    initials="{{ auth()->user()?->initials() ?? 'G' }}"
+                    :name="auth()->user()->name"
+                    :initials="auth()->user()->initials()"
                     icon-trailing="chevrons-up-down"
                 />
 
-                <flux:menu class="w-[220px]">
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ auth()->user()?->initials() ?? 'G' }}
-                                    </span>
-                                </span>
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    @auth
-                                        <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                        <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                                    @elseauth
-                                        <span class="truncate font-semibold">{{ __('Guest') }}</span>
-                                    @endauth
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    @auth
-                        <flux:menu.separator />
-
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <flux:menu.item
-                                as="button"
-                                type="submit"
-                                icon="arrow-right-start-on-rectangle"
-                                class="w-full"
-                            >
-                                {{ __('Log Out') }}
-                            </flux:menu.item>
-                        </form>
-                    @endauth
-                </flux:menu>
+                <x-user-menu />
             </flux:dropdown>
         </flux:sidebar>
 
-        <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
 
+            <flux:button
+                variant="ghost"
+                icon="plus"
+                :href="route('conversation.create')"
+                aria-label="{{ __('New conversation') }}"
+                wire:navigate
+            />
+
             <flux:dropdown position="top" align="end">
-                <flux:profile initials="{{ auth()->user()?->initials() ?? 'G' }}" icon-trailing="chevron-down" />
+                <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
 
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ auth()->user()?->initials() ?? 'G' }}
-                                    </span>
-                                </span>
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    @auth
-                                        <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                        <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                                    @elseauth
-                                        <span class="truncate font-semibold">{{ __('Guest') }}</span>
-                                    @endauth
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    @auth
-                        <flux:menu.separator />
-
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <flux:menu.item
-                                as="button"
-                                type="submit"
-                                icon="arrow-right-start-on-rectangle"
-                                class="w-full"
-                            >
-                                {{ __('Log Out') }}
-                            </flux:menu.item>
-                        </form>
-                    @endauth
-                </flux:menu>
+                <x-user-menu />
             </flux:dropdown>
         </flux:header>
 

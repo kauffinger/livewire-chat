@@ -1,73 +1,53 @@
-<div class="mx-auto max-w-7xl pb-6 xl:px-24">
-    <div>
-        <div class="mb-6 flex items-center justify-between">
-            <flux:heading size="xl" level="1">
-                {{ __('All Conversations') }}
-            </flux:heading>
+<div class="mx-auto w-full max-w-3xl space-y-6 pb-6">
+    <div class="flex min-h-10 items-center justify-between gap-4">
+        <flux:heading size="xl" level="1">{{ __('Conversations') }}</flux:heading>
 
-            <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary">
-                {{ __('New Conversation') }}
+        @if ($conversations->isNotEmpty())
+            <flux:button
+                :href="route('conversation.create')"
+                wire:navigate
+                icon="plus"
+                variant="primary"
+                class="max-lg:hidden"
+            >
+                {{ __('New conversation') }}
             </flux:button>
-        </div>
-
-        @if ($conversations->count() > 0)
-            <div class="space-y-4">
-                @foreach ($conversations as $conversation)
-                    <x-card>
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <flux:heading size="lg" level="3" class="mb-2">
-                                    <flux:link
-                                        :href="route('conversation.show', $conversation->id)"
-                                        wire:navigate.hover
-                                        class="hover:underline"
-                                    >
-                                        {{ $conversation->title }}
-                                    </flux:link>
-                                </flux:heading>
-
-                                <div class="flex flex-wrap gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                    <span class="flex items-center">
-                                        <flux:icon name="clock" class="mr-1 h-4 w-4" />
-                                        {{ $conversation->created_at->diffForHumans() }}
-                                    </span>
-                                    <span class="flex items-center">
-                                        <flux:icon name="arrow-path" class="mr-1 h-4 w-4" />
-                                        {{ $conversation->updated_at->diffForHumans() }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <flux:button
-                                :href="route('conversation.show', $conversation->id)"
-                                wire:navigate.hover
-                                size="sm"
-                                variant="ghost"
-                                icon="arrow-right"
-                            >
-                                {{ __('Open') }}
-                            </flux:button>
-                        </div>
-                    </x-card>
-                @endforeach
-            </div>
-
-            <div class="mt-6">
-                {{ $conversations->links() }}
-            </div>
-        @else
-            <div class="py-12 text-center">
-                <flux:icon name="chat-bubble-left" class="mx-auto mb-4 h-16 w-16 text-zinc-300 dark:text-zinc-600" />
-                <flux:heading size="lg" level="2" class="mb-2 text-zinc-500 dark:text-zinc-400">
-                    {{ __('No conversations yet') }}
-                </flux:heading>
-                <flux:text class="mb-6 text-zinc-400 dark:text-zinc-500">
-                    {{ __('Start your first conversation by creating a new one.') }}
-                </flux:text>
-                <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary">
-                    {{ __('Create Your First Conversation') }}
-                </flux:button>
-            </div>
         @endif
     </div>
+
+    @if ($conversations->isNotEmpty())
+        <ul class="divide-y divide-zinc-200 dark:divide-white/10">
+            @foreach ($conversations as $conversation)
+                <li wire:key="conversation-{{ $conversation->id }}" class="py-1">
+                    <a
+                        href="{{ route('conversation.show', $conversation->id) }}"
+                        wire:navigate.hover
+                        class="flex items-center gap-4 rounded-lg px-3 py-2.5 hover:bg-zinc-800/5 dark:hover:bg-white/[7%]"
+                    >
+                        <span class="min-w-0 flex-1 truncate font-medium text-zinc-800 dark:text-white">
+                            {{ $conversation->title }}
+                        </span>
+
+                        <time
+                            datetime="{{ $conversation->updated_at->toIso8601String() }}"
+                            class="shrink-0 text-sm text-zinc-500 dark:text-zinc-400"
+                        >
+                            {{ $conversation->updated_at->diffForHumans() }}
+                        </time>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+
+        {{ $conversations->links() }}
+    @else
+        <div class="py-16 text-center">
+            <flux:heading size="lg" level="2">{{ __('No conversations yet') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Every conversation you start is kept here.') }}</flux:text>
+
+            <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary" class="mt-6">
+                {{ __('New conversation') }}
+            </flux:button>
+        </div>
+    @endif
 </div>

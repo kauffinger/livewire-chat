@@ -1,47 +1,34 @@
-<div x-data>
-    <flux:navlist.group heading="{{ __('Conversations') }}">
-        <!-- New Conversation button - fixed at top -->
-        <div class="mb-2 flex-shrink-0">
-            <flux:button
-                icon="plus"
-                size="sm"
-                class="w-full hover:cursor-pointer"
-                :href="route('conversation.create')"
-                wire:navigate
-            >
-                {{ __('New Conversation') }}
-            </flux:button>
-        </div>
+<div class="space-y-4">
+    <flux:button icon="plus" size="sm" class="w-full" :href="route('conversation.create')" wire:navigate>
+        {{ __('New conversation') }}
+    </flux:button>
 
-        <!-- Scrollable conversation list -->
-        <div class="min-h-0 space-y-1">
+    @if ($this->conversations !== [])
+        <flux:navlist.group :heading="__('Recent')">
             @foreach ($this->conversations as $conversation)
                 <flux:navlist.item
+                    variant="outline"
                     :href="route('conversation.show', $conversation['id'])"
-                    icon="layout-grid"
                     :current="$activeConversationId === $conversation['id']"
+                    :title="$conversation['title']"
+                    class="*:min-w-0"
                     wire:key="conversation-{{ $conversation['id'] }}"
                     wire:navigate
                 >
-                    {{ $conversation['title'] }}
+                    <span class="block truncate leading-5">{{ $conversation['title'] }}</span>
                 </flux:navlist.item>
             @endforeach
-        </div>
+        </flux:navlist.group>
+    @endif
 
-        <!-- Show All button -->
-        @auth
-            <div class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
-                <flux:button
-                    :href="route('conversations.index')"
-                    wire:navigate.hover
-                    icon="list-bullet"
-                    size="sm"
-                    variant="ghost"
-                    class="w-full justify-start"
-                >
-                    {{ __('Show All Conversations') }}
-                </flux:button>
-            </div>
-        @endauth
-    </flux:navlist.group>
+    @auth
+        <flux:navlist.item
+            variant="outline"
+            :href="route('conversations.index')"
+            icon="list-bullet"
+            wire:navigate.hover
+        >
+            {{ __('All conversations') }}
+        </flux:navlist.item>
+    @endauth
 </div>

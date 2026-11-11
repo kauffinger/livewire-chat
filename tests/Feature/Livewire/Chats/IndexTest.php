@@ -49,8 +49,8 @@ it('displays conversation metadata', function (): void {
     livewire(Index::class)
         ->assertOk()
         ->assertSeeText($conversation->title)
-        ->assertSeeText('5 days ago') // created_at
-        ->assertSeeText('2 hours ago'); // updated_at
+        ->assertSeeText('2 hours ago')
+        ->assertDontSeeText('5 days ago');
 });
 
 it('shows conversations in descending order by updated_at', function (): void {
@@ -94,8 +94,8 @@ it('shows empty state with create button when no conversations', function (): vo
     livewire(Index::class)
         ->assertOk()
         ->assertSeeText('No conversations yet')
-        ->assertSeeText('Start your first conversation by creating a new one.')
-        ->assertSeeText('Create Your First Conversation')
+        ->assertSeeText('Every conversation you start is kept here.')
+        ->assertSeeText('New conversation')
         ->assertSeeHtml('href="'.route('conversation.create').'"');
 });
 
@@ -106,7 +106,6 @@ it('shows all conversation action buttons', function (): void {
 
     livewire(Index::class)
         ->assertOk()
-        ->assertSeeText('Open')
         ->assertSeeHtml('href="'.route('conversation.show', $conversation->id).'"')
         ->assertSeeHtml('wire:navigate.hover');
 });

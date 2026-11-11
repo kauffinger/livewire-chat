@@ -10,9 +10,11 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.auth')]
+#[Title('Reset password')]
 class ResetPassword extends Component
 {
     #[Locked]

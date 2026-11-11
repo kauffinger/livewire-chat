@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Laravel\Ai\Models\Conversation;
 use Livewire\Attributes\Computed;
@@ -32,7 +31,7 @@ class ChatSidebar extends Component
             ->get()
             ->map(fn (Conversation $conversation): array => [
                 'id' => $conversation->id,
-                'title' => Str::limit($conversation->title, 20),
+                'title' => $conversation->title,
             ])
             ->all() ?? [];
     }

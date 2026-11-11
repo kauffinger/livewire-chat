@@ -12,8 +12,7 @@ it('mounts successfully', function (): void {
 
     livewire(ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Conversations')
-        ->assertSeeText('New Conversation');
+        ->assertSeeText('New conversation');
 });
 
 it('links to a new conversation', function (): void {
@@ -67,22 +66,22 @@ it('highlights active conversation', function (): void {
         ->assertSet('activeConversationId', $conversation->id);
 });
 
-it('shows show all conversations button for authenticated users', function (): void {
+it('links authenticated users to all conversations', function (): void {
     actingAs(User::factory()->create());
 
     livewire(ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('Show All Conversations')
+        ->assertSeeText('All conversations')
         ->assertSeeHtml('href="'.route('conversations.index').'"');
 });
 
-it('does not show show all conversations button for guests', function (): void {
+it('does not link guests to all conversations', function (): void {
     livewire(ChatSidebar::class)
         ->assertOk()
-        ->assertDontSeeText('Show All Conversations');
+        ->assertDontSeeText('All conversations');
 });
 
-it('truncates long conversation titles', function (): void {
+it('keeps long conversation titles whole for the browser to truncate', function (): void {
     $user = User::factory()->create();
     $longTitle = 'This is a very long conversation title that should be truncated';
     ConversationFactory::new()->recycle($user)->create(['title' => $longTitle]);
@@ -91,8 +90,7 @@ it('truncates long conversation titles', function (): void {
 
     livewire(ChatSidebar::class)
         ->assertOk()
-        ->assertSeeText('This is a very long...')
-        ->assertDontSeeText($longTitle);
+        ->assertSeeText($longTitle);
 });
 
 it('refreshes its conversations when a conversation is updated', function (): void {

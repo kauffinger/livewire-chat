@@ -18,6 +18,6 @@ class Index extends Component
                 ->conversations()
                 ->latest('updated_at')
                 ->paginate(10),
-        ]);
+        ])->title(__('Conversations'));
     }
 }
