@@ -3,7 +3,7 @@
         wire:model="newMessage"
         rows="auto"
         resize="none"
-        class="max-h-48 pe-24"
+        class="max-h-48 pe-14"
         placeholder="{{ __('Type your message here...') }}"
         x-on:keydown.enter="
             if (! $event.shiftKey && ! $event.isComposing) {
@@ -13,15 +13,7 @@
         "
     />
 
-    <div class="absolute end-2 bottom-2 flex items-center gap-1">
-        <flux:button
-            size="sm"
-            variant="ghost"
-            icon="cog-6-tooth"
-            :href="route('settings.profile')"
-            :tooltip="__('Settings')"
-            wire:navigate
-        />
+    <div class="absolute end-2 bottom-2">
         <flux:button
             x-ref="send"
             size="sm"
