@@ -3,20 +3,19 @@
         "claude_code",
         "codex"
     ],
+    "cloud": true,
     "guidelines": true,
     "herd_mcp": true,
     "mcp": true,
-    "packages": [
-        "prism-php/prism",
-        "laravel/ai"
-    ],
     "sail": false,
     "skills": [
+        "infer-conventions",
+        "deploying-to-cloud",
+        "ai-sdk-development",
+        "laravel-best-practices",
+        "testing-best-practices",
         "fluxui-development",
         "livewire-development",
-        "pest-testing",
-        "tailwindcss-development",
-        "developing-with-ai-sdk",
-        "developing-with-prism"
+        "tailwindcss-development"
     ]
 }

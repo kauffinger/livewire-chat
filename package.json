@@ -8,25 +8,24 @@
         "format:check": "prettier --check ."
     },
     "dependencies": {
-        "@tailwindcss/vite": "^4.0.7",
-        "autoprefixer": "^10.4.20",
-        "axios": "^1.7.4",
-        "concurrently": "^9.0.1",
-        "highlight.js": "^11.11.1",
-        "laravel-vite-plugin": "^2.0",
-        "markdown-it": "^14.1.0",
-        "prettier": "^3.7.0",
-        "prettier-plugin-tailwindcss": "^0.6.12",
+        "@tailwindcss/vite": "^4.3.4",
+        "autoprefixer": "^10.6.2",
+        "axios": "^1.21.0",
+        "concurrently": "^10.0.6",
+        "highlight.js": "^11.12.0",
+        "laravel-vite-plugin": "^3.2.0",
+        "markdown-it": "^15.0.3",
+        "prettier": "^3.9.10",
         "prettier-plugin-blade": "^2.1.21",
-        "tailwindcss": "^4.0.7",
-        "vite": "^7.0"
+        "prettier-plugin-tailwindcss": "^0.8.1",
+        "tailwindcss": "^4.3.4",
+        "vite": "^8.3.5"
     },
     "optionalDependencies": {
-        "@rollup/rollup-linux-x64-gnu": "4.9.5",
-        "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
-        "lightningcss-linux-x64-gnu": "^1.29.1"
+        "@tailwindcss/oxide-linux-x64-gnu": "^4.3.4",
+        "lightningcss-linux-x64-gnu": "^1.33.0"
     },
     "devDependencies": {
-        "@tailwindcss/typography": "^0.5.16"
+        "@tailwindcss/typography": "^0.5.20"
     }
 }

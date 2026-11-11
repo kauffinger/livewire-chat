@@ -1,72 +1,81 @@
 ---
 name: fluxui-development
-description: >-
-  Develops UIs with Flux UI Free components. Activates when creating buttons, forms, modals,
-  inputs, dropdowns, checkboxes, or UI components; replacing HTML form elements with Flux;
-  working with flux: components; or when the user mentions Flux, component library, UI components,
-  form fields, or asks about available Flux components.
+description: "Use this skill for Flux UI development in Livewire applications only. Trigger when working with <flux:*> components, building or customizing Livewire component UIs, creating forms, modals, tables, or other interactive elements. Covers: flux: components (buttons, inputs, modals, forms, tables, date-pickers, kanban, badges, tooltips, etc.), component composition, Tailwind CSS styling, Heroicons/Lucide icon integration, validation patterns, responsive design, and theming. Do not use for non-Livewire frameworks or non-component styling."
+license: MIT
+metadata:
+  author: laravel
 ---
 
-# Flux UI Development
-
-## When to Apply
-
-Activate this skill when:
-
-- Creating UI components or pages
-- Working with forms, modals, or interactive elements
-- Checking available Flux components
+# Flux UI development
 
 ## Documentation
 
 Use `search-docs` for detailed Flux UI patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
 This project uses the free edition of Flux UI, which includes all free components and variants but not Pro components.
 
-Flux UI is a component library for Livewire built with Tailwind CSS. It provides components that are easy to use and customize.
+Flux UI is a component library for Livewire built with Tailwind CSS.
 
-Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
+Use a Flux UI component when one exists. If no Flux component fits your needs, fall back to a standard Blade component.
 
-<code-snippet name="Basic Button" lang="blade">
+<!-- Basic Button -->
+```blade
 <flux:button variant="primary">Click me</flux:button>
-</code-snippet>
+```
 
-## Available Components (Free Edition)
+## Available components (free edition)
 
-Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, profile, radio, select, separator, skeleton, switch, text, textarea, tooltip
+Available: avatar, badge, brand, breadcrumbs, button, callout, card, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, pagination, profile, progress, radio, select, separator, skeleton, switch, table, text, textarea, toast, tooltip
 
-## Common Patterns
+## Icons
 
-### Form Fields
+Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Look up exact icon names on the Heroicons site. Do not guess or invent icon names.
 
-<code-snippet name="Form Field" lang="blade">
+<!-- Icon Button -->
+```blade
+<flux:button icon="arrow-down-tray">Export</flux:button>
+```
+
+For an icon that Heroicons lacks, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
+
+```bash
+php artisan flux:icon crown grip-vertical github
+```
+
+## Common patterns
+
+### Form fields
+
+<!-- Form Field -->
+```blade
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
     <flux:error name="email" />
 </flux:field>
-</code-snippet>
+```
 
 ### Modals
 
-<code-snippet name="Modal" lang="blade">
+<!-- Modal -->
+```blade
 <flux:modal wire:model="showModal">
     <flux:heading>Title</flux:heading>
     <p>Content</p>
 </flux:modal>
-</code-snippet>
+```
 
 ## Verification
 
-1. Check component renders correctly
+1. Check that the component renders correctly
 2. Test interactive states
 3. Verify mobile responsiveness
 
-## Common Pitfalls
+## Common pitfalls
 
 - Trying to use Pro-only components in the free edition
-- Not checking if a Flux component exists before creating custom implementations
+- Not checking whether a Flux component exists before building a custom one
 - Forgetting to use the `search-docs` tool for component-specific documentation
-- Not following existing project patterns for Flux usage
+- Not following the project's existing Flux patterns
