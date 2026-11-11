@@ -73,6 +73,15 @@ class ChatAgent implements Agent, Conversational, HasTools
 
 Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_API_KEY`).
 
+To change the default provider without touching the agent, set `AI_PROVIDER` to any provider in `config/ai.php`. This is also how you point the chat at an OpenAI-compatible gateway or a local model server:
+
+```env
+AI_PROVIDER=openai-compatible
+OPENAI_COMPATIBLE_URL=https://your-gateway.example/v1
+OPENAI_COMPATIBLE_API_KEY=your-gateway-key
+OPENAI_COMPATIBLE_MODEL=your-model
+```
+
 ### 2. Explore the Chat Interface
 
 Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:

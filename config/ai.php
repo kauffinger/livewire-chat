@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => 'openai',
+    'default' => env('AI_PROVIDER', 'openai'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -138,6 +138,11 @@ return [
             'driver' => 'openai-compatible',
             'url' => env('OPENAI_COMPATIBLE_URL'),
             'key' => env('OPENAI_COMPATIBLE_API_KEY'),
+            'models' => [
+                'text' => [
+                    'default' => env('OPENAI_COMPATIBLE_MODEL'),
+                ],
+            ],
         ],
 
         'openrouter' => [

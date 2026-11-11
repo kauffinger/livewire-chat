@@ -49,7 +49,7 @@ npm run build
 
 ### LLM Integration (Laravel AI SDK)
 
-- **Default provider**: OpenAI, set in `config/ai.php`
+- **Default provider**: OpenAI, changed with `AI_PROVIDER` (see `config/ai.php`)
 - **Multi-provider support**: Switch provider or model with attributes on `ChatAgent`
 - **Streaming**: Real-time token streaming for smooth UX
 - **Tools**: Live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`
