@@ -1,10 +1,10 @@
-<div class="mx-auto flex h-[calc(100dvh-6.5rem)] max-w-3xl flex-col gap-4 lg:h-[calc(100dvh-4rem)]">
+<div class="flex h-[calc(100dvh-6.5rem)] flex-col gap-4 lg:h-[calc(100dvh-4rem)]">
     <div
-        class="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto"
+        class="-me-6 flex min-h-0 flex-1 [scrollbar-gutter:stable_both-edges] flex-col-reverse overflow-y-auto pe-6 lg:-me-8 lg:pe-8"
         x-data
         x-init="$el.scrollTop = $el.scrollHeight"
     >
-        <div class="mb-auto flex flex-col gap-6 py-1">
+        <div class="mx-auto mb-auto flex w-full max-w-3xl flex-col gap-6 py-1">
             @if ($conversationId === null && $pendingMessage === '')
                 <flux:heading size="xl" level="1" class="py-12 text-center">
                     {{ __('What can I help you with?') }}

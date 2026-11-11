@@ -1,4 +1,4 @@
-<div class="relative shrink-0" x-data>
+<div class="relative mx-auto w-full max-w-3xl shrink-0" x-data>
     <flux:textarea
         wire:model="newMessage"
         rows="auto"
