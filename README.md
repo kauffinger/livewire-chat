@@ -5,43 +5,43 @@
 [![Linter Action Status](https://img.shields.io/github/actions/workflow/status/kauffinger/livewire-chat/lint.yml?branch=main&label=linter&style=flat-square)](https://github.com/kauffinger/livewire-chat/actions?query=workflow%3Alint+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/kauffinger/livewire-chat-kit.svg?style=flat-square)](https://packagist.org/packages/kauffinger/livewire-chat-kit)
 
-A Laravel Starter Kit for building LLM-powered chat interfaces with Livewire, [FluxUI](https://fluxui.com), and the [Laravel AI SDK](https://laravel.com/docs/ai-sdk). Jump right into the LLM party without touching (much) JavaScript, while still having a good-looking and effortlessly feeling chat interface.
+A Laravel starter kit for an LLM chat interface, built with Livewire, [FluxUI](https://fluxui.com), and the [Laravel AI SDK](https://laravel.com/docs/ai-sdk).
 
-This starter kit provides a clean, simple foundation for creating chat applications. It's designed to get you sending your first chat messages to an LLM instantly.
+The chat streams replies, renders markdown, calls tools, asks the user before a tool changes something, and stores every conversation. Apart from the Alpine component that renders streamed markdown, it is written in PHP and Blade.
+
+> [!NOTE]
+> Version 3 is built on the Laravel AI SDK. The SDK stores conversations and messages, so the kit no longer ships its own `Chat` and `Message` models. Versions 1 and 2 were built on [Prism](https://prismphp.com). The last Prism release is the `v2.0.1` tag.
 
 ## Features
 
-### Chat System
+### Conversations
 
-- **Multi-Conversation Management:** Create, manage, and navigate between multiple conversations
-- **Chat Sidebar:** Your recent conversations grouped by date, in a sidebar that collapses to a rail and stays in place while you navigate
-- **Conversation Search:** Find any conversation by its title
-- **Persistent History:** Conversations are stored by the AI SDK and accessible across sessions
+- **Multiple Conversations:** Start a conversation, come back to it later, and switch between conversations
+- **Sidebar:** The 30 most recent conversations, grouped by date. It collapses to a rail and stays in place while you navigate
+- **Search:** Find a conversation by its title
+- **History:** The AI SDK stores every conversation in the database
 
-### LLM Integration
+### LLM
 
-- **Livewire-Powered:** Build dynamic interfaces with PHP.
-- **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
-- **Laravel AI SDK:** The first-party way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
-- **Tool Support:** Built-in LLM tool calling with visual feedback
-- **Human Tool Approval:** Tools that change something wait for the user to approve or reject them
+- **Streaming:** Replies appear while the model writes them, through Livewire streams
+- **Providers:** OpenAI by default. Any provider in `config/ai.php` can be used instead, including OpenAI-compatible gateways and local model servers
+- **Tools:** The model can call PHP classes as tools. Each call is shown with its arguments and result
+- **Tool Approval:** A tool that changes something waits until the user approves or rejects the call
 
-### UI & Design
+### Interface
 
-- **FluxUI Components:** Beautiful, pre-built UI components for a polished look and feel.
-- **Minimal JavaScript:** Focus on your PHP backend.
-- **TailwindCSS Styled:** Includes a TailwindCSS setup with a typography plugin for rendering markdown.
-- **Real-time Updates:** Seamless UI updates using Livewire streams
+- **FluxUI:** Built from Flux components and styled with Tailwind CSS and its typography plugin
+- **Markdown:** Replies are rendered with markdown-it, and code blocks are highlighted with highlight.js
 
 ## Installation
 
-You can install this starter kit into a new Laravel application using Composer:
+Create a new Laravel application from the kit with the Laravel installer:
 
 ```bash
 laravel new my-chat-app --using=kauffinger/livewire-chat-kit
 ```
 
-After installation, make sure to:
+Then:
 
 1.  Run migrations: `php artisan migrate`
 2.  Install NPM dependencies: `npm install`
@@ -49,15 +49,15 @@ After installation, make sure to:
 
 ## Getting Started
 
-### 1. Configure LLM Provider
+### Configure the LLM Provider
 
-This starter kit uses the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) to interact with LLMs. By default, it's configured to use OpenAI. You'll need to add your API key to your `.env` file.
+The chat talks to OpenAI by default. Add your API key to `.env`:
 
 ```env
 OPENAI_API_KEY=your-openai-api-key
 ```
 
-The default provider is set in `config/ai.php`. You can switch the chat to another provider or model with attributes on the agent. For example, to use Claude:
+To use another provider or model for the chat, add attributes to the agent. For example, Claude:
 
 ```php
 // In app/Ai/Agents/ChatAgent.php
@@ -66,14 +66,14 @@ use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Enums\Lab;
 
 #[Provider(Lab::Anthropic)]
-#[Model('claude-sonnet-5')]
+#[Model('claude-sonnet-5-5')]
 class ChatAgent implements Agent, Conversational, HasTools
 {
     // ...
 }
 ```
 
-Remember to add the corresponding API key to your `.env` file (e.g., `ANTHROPIC_API_KEY`).
+That provider's API key goes in `.env` as well, `ANTHROPIC_API_KEY` in this case.
 
 To change the default provider without touching the agent, set `AI_PROVIDER` to any provider in `config/ai.php`. This is also how you point the chat at an OpenAI-compatible gateway or a local model server:
 
@@ -84,16 +84,51 @@ OPENAI_COMPATIBLE_API_KEY=your-gateway-key
 OPENAI_COMPATIBLE_MODEL=your-model
 ```
 
-### 2. Explore the Chat Interface
+### Open the Chat
 
-Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:
+Open `/dashboard`. It redirects to your last conversation, or to a new one when you have none. From there you can:
 
-- Create new conversations from the sidebar
-- Switch between existing conversations, or search them by title
-- Use built-in tools (like the example sum calculator)
+- Start a new conversation from the sidebar
+- Switch between conversations, or search them by title
+- Ask the assistant to add two numbers, which calls the example `Sum` tool
 - Ask the assistant to change the name on your profile, and approve or reject the tool call it asks for
 
 ## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Browser
+        Input["Message input"]
+        Markdown["markdownProcessor.js"]
+    end
+
+    subgraph Livewire
+        Show["Chats\Show"]
+        Sidebar["ChatSidebar"]
+        Index["Chats\Index"]
+    end
+
+    subgraph SDK["Laravel AI SDK"]
+        Agent["ChatAgent"]
+        Tools["Sum and UpdateProfileName"]
+        Store["ConversationStore"]
+    end
+
+    Provider["LLM provider"]
+    Database[("agent_conversations and agent_conversation_messages")]
+
+    Input -- "sendMessage()" --> Show
+    Show -- "stream()" --> Agent
+    Agent <--> Provider
+    Agent --> Tools
+    Agent -- "stores each turn" --> Store
+    Show -- "history and pending approvals" --> Store
+    Store <--> Database
+    Show -- "wire:stream" --> Markdown
+    Show -. "conversation-updated" .-> Sidebar
+    Sidebar -- "User::conversations()" --> Database
+    Index -- "User::conversations()" --> Database
+```
 
 ### Core Components
 
@@ -105,7 +140,93 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 - **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
 - **`app/Actions/UpdateStreamDataFromAiEvent.php`** - Folds the AI SDK's stream events into the data the UI renders
 
-Conversations and messages belong to the AI SDK. The SDK creates a conversation and gives it a title when its first message is answered, the chat reads its history through the SDK's `ConversationStore`, and the `User` model lists its conversations with the SDK's `HasConversations` trait.
+### The Agent
+
+The chat is one agent class. The `Promptable` trait adds `prompt()` and `stream()`. With `RemembersConversations`, the SDK loads the conversation before each prompt and stores the turn after it.
+
+```php
+// app/Ai/Agents/ChatAgent.php
+#[MaxSteps(5)]
+class ChatAgent implements Agent, Conversational, HasTools
+{
+    use Promptable;
+    use RemembersConversations;
+
+    /**
+     * Get the instructions that the agent should follow.
+     */
+    public function instructions(): Stringable|string
+    {
+        return 'You are a helpful assistant.';
+    }
+
+    /**
+     * Get the tools available to the agent.
+     *
+     * @return list<Agent|Tool|ProviderTool>
+     */
+    public function tools(): iterable
+    {
+        return [
+            new Sum,
+            new UpdateProfileName,
+        ];
+    }
+}
+```
+
+### Conversations
+
+Conversations and messages belong to the AI SDK. The app never creates them itself: the SDK creates a conversation and gives it a title when its first message is answered, and stores every turn after that.
+
+```mermaid
+erDiagram
+    users ||--o{ agent_conversations : "participant"
+    agent_conversations ||--o{ agent_conversation_messages : "messages"
+
+    users {
+        bigint id PK
+        string name
+        string email
+    }
+
+    agent_conversations {
+        string id PK
+        string participant_type
+        bigint participant_id
+        string title
+    }
+
+    agent_conversation_messages {
+        string id PK
+        string conversation_id FK
+        string agent
+        string role
+        text content
+        longtext steps
+        string status
+    }
+```
+
+The `User` model lists its conversations with the SDK's `HasConversations` trait, and the chat reads a conversation's history through the SDK's `ConversationStore`:
+
+```php
+// app/Models/User.php
+final class User extends Authenticatable
+{
+    use HasConversations;
+}
+
+// app/Livewire/ChatSidebar.php
+Auth::user()->conversations()->latest('updated_at')->limit(30)->get();
+
+// app/Livewire/Chats/Show.php
+resolve(ConversationStore::class)->paginateConversationMessages($this->conversationId, $this->messagesPerPage);
+```
+
+A conversation can only be opened by the user it belongs to. `Chats\Show` aborts with a 403 for anyone else.
+
+Titles are written by the provider's cheapest model. Set `ai.conversations.generate_title` to `false` in `config/ai.php` to use the start of the first message instead.
 
 ### UI Components
 
@@ -116,13 +237,39 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 - **Message Input:** Sits in the middle of a new conversation and docks to the bottom once it starts. It grows with the text, Enter sends and Shift+Enter starts a new line. While a reply streams, the send button becomes a stop button
 - **Code Blocks:** Show their language and a copy button
 - **Earlier Messages:** Loaded when you scroll to the top of a conversation
-- **Toast Notifications:** Flux toasts for user feedback
+- **Toast Notifications:** Flux toasts, for example when the provider fails
 
-## How it Works
+## Message Flow
 
-### Message Flow
+```mermaid
+sequenceDiagram
+    actor User
+    participant Browser
+    participant Show as Chats\Show
+    participant Agent as ChatAgent
+    participant Provider as LLM provider
+    participant Store as ConversationStore
 
-1. **User Input:** Message typed in chat interface and submitted
+    User->>Browser: Types a message and presses Enter
+    Browser->>Show: sendMessage()
+    Show-->>Browser: Shows the pending message and calls runAgent()
+    Browser->>Show: runAgent()
+    Show->>Agent: continueOrStart()->stream()
+    Agent->>Store: Reads the conversation so far
+    Agent->>Provider: Prompts with the history and the tools
+
+    loop Every stream event
+        Provider-->>Agent: Text, reasoning, tool call or tool result
+        Agent-->>Show: StreamEvent
+        Show-->>Browser: wire:stream to streamed-message
+    end
+
+    Agent->>Store: Stores the user message and the assistant's turn
+    Show-->>Browser: Renders the messages island
+    Show-->>Browser: Dispatches conversation-updated or redirects to the new conversation
+```
+
+1. **User Input:** The user types a message and submits it
 2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
 3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
 4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
@@ -131,20 +278,242 @@ Conversations and messages belong to the AI SDK. The SDK creates a conversation 
 7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
 8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
 
-Titles are written by the provider's cheapest model. Set `ai.conversations.generate_title` to `false` in `config/ai.php` to use the start of the first message instead.
+Steps 3 to 5 are one loop in `Chats\Show`. Here it is without the error handling:
 
-### Tool Integration
+```php
+// app/Livewire/Chats/Show.php
+protected function streamAgent(Decisions|string $prompt): void
+{
+    $stream = ChatAgent::make()
+        ->continueOrStart($this->conversationId, as: Auth::user())
+        ->stream($prompt);
 
-- **Tool Definitions:** Tools live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`. Create new ones with `php artisan make:tool`
-- **Automatic Execution:** LLM can call tools during conversation flow
-- **Visual Feedback:** Tool calls are displayed while streaming and in the conversation history
+    $updateStreamData = new UpdateStreamDataFromAiEvent;
+    $streamData = $updateStreamData->initial();
+
+    foreach ($stream as $event) {
+        $streamData = $updateStreamData->handle($streamData, $event);
+
+        $this->stream(
+            json_encode($streamData, JSON_HEX_TAG | JSON_HEX_AMP),
+            true,
+            to: 'streamed-message',
+        );
+    }
+
+    $this->renderIsland('messages');
+
+    if ($this->conversationId === null) {
+        $this->redirectRoute('conversation.show', $stream->conversationId, navigate: true);
+
+        return;
+    }
+
+    $this->dispatch('conversation-updated');
+}
+```
+
+`UpdateStreamDataFromAiEvent` folds each event into one array with the text, the reasoning and the tool calls of the turn so far:
+
+```php
+// app/Actions/UpdateStreamDataFromAiEvent.php
+if ($event instanceof StreamStart && trim($streamData['text']) !== '') {
+    $streamData['text'] .= "\n\n";
+} elseif ($event instanceof TextDelta) {
+    $streamData['text'] .= $event->delta;
+} elseif ($event instanceof ReasoningDelta) {
+    $streamData['thinking'] .= $event->delta;
+} elseif ($event instanceof ToolCall) {
+    $streamData['toolCalls'][] = Arr::only($event->toolCall->toArray(), ['id', 'name', 'arguments']);
+} elseif ($event instanceof ToolResult) {
+    // Adds the result to the tool call it belongs to.
+}
+```
+
+On the page, that array arrives in a hidden element. The `markdownProcessor` Alpine component watches it and renders the reply next to it:
+
+```blade
+{{-- resources/views/components/chat/assistant-message.blade.php --}}
+<span x-ref="raw" class="hidden" wire:stream="streamed-message" wire:replace></span>
+<article wire:ignore x-ref="reply"></article>
+```
+
+## Tools
+
+- **Definitions:** Tools live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`. Create new ones with `php artisan make:tool`
+- **Execution:** The model decides when to call a tool. The SDK runs it and returns the result to the model, for up to five steps per turn (`#[MaxSteps(5)]` on the agent)
+- **Display:** Tool calls are shown while the reply streams and in the conversation history
 - **Approval:** A tool that implements the SDK's `Approvable` contract pauses the turn. The chat shows the call with its arguments and resumes the turn once the user approves or rejects it
 
-### Technical Implementation
+A tool is a description, a schema and a `handle()` method:
 
-- **Ownership Checks:** Conversations can only be opened by the user they belong to
-- **Testing:** Comprehensive Pest test suite with Livewire integration and faked agents
-- **Code Quality:** Laravel Pint, Rector, and Prettier for consistent formatting
+```php
+// app/Ai/Tools/Sum.php
+class Sum implements Tool
+{
+    /**
+     * Get the description of the tool's purpose.
+     */
+    public function description(): Stringable|string
+    {
+        return 'Sums two numbers together.';
+    }
+
+    /**
+     * Execute the tool.
+     */
+    public function handle(Request $request): Stringable|string
+    {
+        return (string) ($request->float('a') + $request->float('b'));
+    }
+
+    /**
+     * Get the tool's schema definition.
+     */
+    public function schema(JsonSchema $schema): array
+    {
+        return [
+            'a' => $schema->number()->description('The first number to sum.')->required(),
+            'b' => $schema->number()->description('The second number to sum.')->required(),
+        ];
+    }
+}
+```
+
+### Approval
+
+A tool that changes data can ask for the user's approval first. Implement `Approvable` and the SDK pauses the turn before the tool runs:
+
+```php
+// app/Ai/Tools/UpdateProfileName.php
+class UpdateProfileName implements Approvable, Tool
+{
+    use InteractsWithApprovals;
+
+    /**
+     * Execute the tool.
+     */
+    public function handle(Request $request): Stringable|string
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        Auth::user()->update($validated);
+
+        return "The profile name is now {$validated['name']}.";
+    }
+
+    /**
+     * Determine whether the tool needs approval for the given request.
+     */
+    protected function needsApproval(Request $request): Approval|bool
+    {
+        return Approval::required(__('This will change the name on your profile.'));
+    }
+}
+```
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Show as Chats\Show
+    participant Agent as ChatAgent
+    participant Tool as UpdateProfileName
+    participant Store as ConversationStore
+
+    User->>Show: Change my profile name to Ada Lovelace
+    Show->>Agent: stream()
+    Agent->>Tool: Does this call need approval?
+    Tool-->>Agent: Approval::required()
+    Agent->>Store: Stores the turn as paused
+    Show->>Store: pendingApprovalsFor()
+    Show-->>User: The approval takes the place of the message input
+
+    alt Approve
+        User->>Show: approveToolCalls()
+        Show->>Agent: stream(Decision::approveAll())
+        Agent->>Tool: handle()
+    else Reject
+        User->>Show: rejectToolCalls()
+        Show->>Agent: stream(Decision::rejectAll())
+    end
+
+    Agent->>Store: Stores the turn as completed
+    Show-->>User: The reply continues
+```
+
+The decision resumes the turn through the same `streamAgent()` method a message uses:
+
+```php
+// app/Livewire/Chats/Show.php
+public function approveToolCalls(): void
+{
+    if ($this->pendingApprovals === []) {
+        return;
+    }
+
+    $this->streamAgent(Decision::approveAll());
+}
+
+public function rejectToolCalls(): void
+{
+    if ($this->pendingApprovals === []) {
+        return;
+    }
+
+    $this->streamAgent(Decision::rejectAll(__('The user declined this action.')));
+}
+```
+
+## Testing and Code Quality
+
+Tests fake the agent with `ChatAgent::fake()`, so they never call a provider. `ConversationFactory` and `ConversationMessageFactory` build the SDK's models:
+
+```php
+// tests/Feature/Livewire/Chats/ShowTest.php
+it('allows sending messages', function (): void {
+    ChatAgent::fake(['Hello, human!']);
+
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->set('newMessage', 'Hello, world!')
+        ->call('sendMessage')
+        ->call('runAgent')
+        ->assertDispatched('conversation-updated');
+
+    ChatAgent::assertPrompted('Hello, world!');
+
+    expect($conversation->messages()->orderBy('id')->get())
+        ->toHaveCount(2)
+        ->sequence(
+            fn ($message) => $message->role->toBe('user')->content->toBe('Hello, world!'),
+            fn ($message) => $message->role->toBe('assistant')->content->toBe('Hello, human!'),
+        );
+});
+```
+
+A tool call that waits for approval is faked the same way:
+
+```php
+ChatAgent::fake([
+    AgentResponse::fakeWithPendingApprovals([
+        new PendingApproval(id: 'call_1', tool: 'UpdateProfileName', arguments: ['name' => 'Ada King']),
+    ]),
+    'All done.',
+]);
+```
+
+The tests run with Pest. PHP is formatted with Laravel Pint and Rector, and JavaScript, CSS and Blade with Prettier:
+
+```bash
+composer test
+composer format
+```
 
 ## Toast Notifications
 
@@ -187,13 +556,7 @@ Flux::toast(
 
 ## Contributing
 
-Contributions are welcome! If you'd like to improve the Livewire Chat Kit, please feel free to:
-
-- Report a bug.
-- Suggest a new feature.
-- Submit a pull request.
-
-Please visit the [GitHub repository](https://github.com/kauffinger/livewire-chat-kit) to contribute.
+Bug reports, feature suggestions and pull requests are welcome in the [GitHub repository](https://github.com/kauffinger/livewire-chat-kit).
 
 ## License
 
