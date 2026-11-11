@@ -114,7 +114,7 @@
                         class="w-full justify-start! font-normal!"
                         x-on:click="
                             $wire.newMessage = {{ Js::from($suggestion) }};
-                            $wire.$el.querySelector('textarea').focus()
+                            $wire.sendMessage()
                         "
                     >
                         {{ $suggestion }}

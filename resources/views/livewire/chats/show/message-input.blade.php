@@ -39,11 +39,17 @@
         />
 
         <div class="flex items-center justify-between gap-3 ps-5 pe-3 pb-3">
-            <flux:text size="sm" class="max-sm:invisible pointer-coarse:invisible">
+            <flux:text
+                size="sm"
+                class="max-sm:invisible pointer-coarse:invisible"
+                style="display: none"
+                x-show="$wire.newMessage !== ''"
+                x-transition.opacity
+            >
                 {{ __('Enter to send, Shift + Enter for a new line') }}
             </flux:text>
 
-            <div class="flex shrink-0">
+            <div class="ms-auto flex shrink-0">
                 <flux:button
                     x-ref="send"
                     size="sm"
