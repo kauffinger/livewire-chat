@@ -33,10 +33,12 @@ npm run build
 - **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
 - **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
 - **Message flow**: User input → `sendMessage()` → `runAgent()` → `ChatAgent` streaming → real-time UI updates via Livewire streams
+- **Conversations**: The AI SDK creates and titles a conversation on its first message. `Chats\Show` reads history and pending tool approvals through the SDK's `ConversationStore`
+- **Tool approval**: `Approvable` tools pause the turn; `approveToolCalls()` and `rejectToolCalls()` resume it
 
 ### Data Layer
 
-- **Models**: `User` plus the AI SDK's `Laravel\Ai\Models\Conversation` and `ConversationMessage`
+- **Models**: `User` plus the AI SDK's `Laravel\Ai\Models\Conversation` and `ConversationMessage`. The app never creates conversations or messages itself
 - **Factories**: `ConversationFactory` and `ConversationMessageFactory` build the SDK's models in tests
 - **Authorization**: `Chats\Show` only mounts for the conversation's participant
 

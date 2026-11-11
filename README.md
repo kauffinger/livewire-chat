@@ -23,6 +23,7 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 - **Streamed Responses:** Real-time message streaming from LLMs for a smooth UX.
 - **Laravel AI SDK:** The first-party way of speaking to LLMs. Easy to use, test, and switch between providers (e.g., OpenAI, Anthropic).
 - **Tool Support:** Built-in LLM tool calling with visual feedback
+- **Human Tool Approval:** Tools that change something wait for the user to approve or reject them
 
 ### UI & Design
 
@@ -89,6 +90,7 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 - Create new conversations from the sidebar
 - Switch between existing conversations
 - Use built-in tools (like the example sum calculator)
+- Ask the assistant to change the name on your profile, and approve or reject the tool call it asks for
 
 ## Architecture
 
@@ -96,12 +98,13 @@ Navigate to your application's `/dashboard` route to start interacting with the 
 
 - **`app/Ai/Agents/ChatAgent.php`** - The agent: instructions, tools, and conversation memory
 - **`app/Ai/Tools/Sum.php`** - Example tool the agent can call
+- **`app/Ai/Tools/UpdateProfileName.php`** - Example tool that needs the user's approval before it runs
 - **`app/Livewire/Chats/Index.php`** - Paginate over all of your conversations
 - **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
-- **`app/Livewire/ChatSidebar.php`** - Conversation navigation, history, and new conversation creation
+- **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
 - **`app/Actions/UpdateStreamDataFromAiEvent.php`** - Folds the AI SDK's stream events into the data the UI renders
 
-Conversations and messages are stored by the AI SDK. The kit uses the SDK's own `Laravel\Ai\Models\Conversation` and `Laravel\Ai\Models\ConversationMessage` models, and the `User` model uses the SDK's `HasConversations` trait.
+Conversations and messages belong to the AI SDK. The SDK creates a conversation and gives it a title when its first message is answered, the chat reads its history through the SDK's `ConversationStore`, and the `User` model lists its conversations with the SDK's `HasConversations` trait.
 
 ### UI Components
 
@@ -115,16 +118,20 @@ Conversations and messages are stored by the AI SDK. The kit uses the SDK's own 
 
 1. **User Input:** Message typed in chat interface and submitted
 2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
-3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent` and streams the response
+3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
 4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
 5. **UI Updates:** Livewire streams update the interface in real-time
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
+7. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
+
+Titles are written by the provider's cheapest model. Set `ai.conversations.generate_title` to `false` in `config/ai.php` to use the start of the first message instead.
 
 ### Tool Integration
 
 - **Tool Definitions:** Tools live in `app/Ai/Tools` and are registered in `ChatAgent::tools()`. Create new ones with `php artisan make:tool`
 - **Automatic Execution:** LLM can call tools during conversation flow
 - **Visual Feedback:** Tool calls are displayed while streaming and in the conversation history
+- **Approval:** A tool that implements the SDK's `Approvable` contract pauses the turn. The chat shows the call with its arguments and resumes the turn once the user approves or rejects it
 
 ### Technical Implementation
 
