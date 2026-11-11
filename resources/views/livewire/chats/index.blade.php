@@ -2,18 +2,25 @@
     <div class="flex min-h-10 items-center justify-between gap-4">
         <flux:heading size="xl" level="1">{{ __('Conversations') }}</flux:heading>
 
-        @if ($conversations->isNotEmpty())
-            <flux:button
-                :href="route('conversation.create')"
-                wire:navigate
-                icon="plus"
-                variant="primary"
-                class="max-lg:hidden"
-            >
-                {{ __('New conversation') }}
-            </flux:button>
-        @endif
+        <flux:button
+            :href="route('conversation.create')"
+            wire:navigate
+            icon="plus"
+            variant="primary"
+            class="max-lg:hidden"
+        >
+            {{ __('New conversation') }}
+        </flux:button>
     </div>
+
+    <flux:input
+        wire:model.live.debounce.250ms="search"
+        type="search"
+        icon="magnifying-glass"
+        aria-label="{{ __('Search conversations') }}"
+        placeholder="{{ __('Search by title') }}"
+        x-init="matchMedia('(pointer: fine)').matches && $el.focus()"
+    />
 
     @if ($conversations->isNotEmpty())
         <ul class="divide-y divide-zinc-200 dark:divide-white/10">
@@ -40,14 +47,17 @@
         </ul>
 
         {{ $conversations->links() }}
+    @elseif ($search !== '')
+        <div class="py-16 text-center">
+            <flux:heading size="lg" level="2">{{ __('No conversations found') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('No title contains “:search”.', ['search' => $search]) }}</flux:text>
+
+            <flux:button wire:click="$set('search', '')" class="mt-6">{{ __('Clear search') }}</flux:button>
+        </div>
     @else
         <div class="py-16 text-center">
             <flux:heading size="lg" level="2">{{ __('No conversations yet') }}</flux:heading>
             <flux:text class="mt-1">{{ __('Every conversation you start is kept here.') }}</flux:text>
-
-            <flux:button :href="route('conversation.create')" wire:navigate icon="plus" variant="primary" class="mt-6">
-                {{ __('New conversation') }}
-            </flux:button>
         </div>
     @endif
 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Laravel\Ai\Models\Conversation;
@@ -11,35 +12,31 @@ use Livewire\Component;
 
 class ChatSidebar extends Component
 {
-    public ?string $activeConversationId = null;
-
-    public function mount(): void
-    {
-        $this->activeConversationId = request()->route('conversation')?->id;
-    }
-
     /**
-     * @return array<int, array{id: string, title: string}>
+     * @return Collection<string, Collection<int, Conversation>>
      */
     #[Computed]
-    public function conversations(): array
+    public function conversationGroups(): Collection
     {
-        return Auth::user()
+        $conversations = Auth::user()
             ?->conversations()
             ->latest('updated_at')
-            ->limit(5)
-            ->get()
-            ->map(fn (Conversation $conversation): array => [
-                'id' => $conversation->id,
-                'title' => $conversation->title,
-            ])
-            ->all() ?? [];
+            ->limit(30)
+            ->get();
+
+        return collect($conversations)->groupBy(fn (Conversation $conversation): string => match (true) {
+            $conversation->updated_at->isToday() => __('Today'),
+            $conversation->updated_at->isYesterday() => __('Yesterday'),
+            $conversation->updated_at->gte(today()->subDays(7)) => __('Previous 7 days'),
+            default => __('Older'),
+        });
     }
 
     #[On('conversation-updated')]
-    public function refreshConversations(): void
+    #[On('profile-updated')]
+    public function refresh(): void
     {
-        unset($this->conversations);
+        unset($this->conversationGroups);
     }
 
     public function render(): View

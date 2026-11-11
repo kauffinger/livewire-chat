@@ -1,9 +1,4 @@
-<section class="mt-10 space-y-6 border-t border-zinc-200 pt-10 dark:border-white/10">
-    <div>
-        <flux:heading size="lg" level="2">{{ __('Delete account') }}</flux:heading>
-        <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>
-    </div>
-
+<x-settings.section :heading="__('Delete account')" :description="__('Delete your account and all of its resources')">
     <flux:modal.trigger name="confirm-user-deletion">
         <flux:button variant="danger">{{ __('Delete account') }}</flux:button>
     </flux:modal.trigger>
@@ -29,4 +24,4 @@
             </div>
         </form>
     </flux:modal>
-</section>
+</x-settings.section>

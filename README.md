@@ -14,7 +14,8 @@ This starter kit provides a clean, simple foundation for creating chat applicati
 ### Chat System
 
 - **Multi-Conversation Management:** Create, manage, and navigate between multiple conversations
-- **Chat Sidebar:** Quick access to your most recent conversations
+- **Chat Sidebar:** Your recent conversations grouped by date, in a sidebar that collapses to a rail and stays in place while you navigate
+- **Conversation Search:** Find any conversation by its title
 - **Persistent History:** Conversations are stored by the AI SDK and accessible across sessions
 
 ### LLM Integration
@@ -88,7 +89,7 @@ OPENAI_COMPATIBLE_MODEL=your-model
 Navigate to your application's `/dashboard` route to start interacting with the chat interface. You can:
 
 - Create new conversations from the sidebar
-- Switch between existing conversations
+- Switch between existing conversations, or search them by title
 - Use built-in tools (like the example sum calculator)
 - Ask the assistant to change the name on your profile, and approve or reject the tool call it asks for
 

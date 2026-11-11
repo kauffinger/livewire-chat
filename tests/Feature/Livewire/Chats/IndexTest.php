@@ -133,3 +133,47 @@ it('only lists the conversations of the current user', function (): void {
         ->assertSeeText('Mine')
         ->assertDontSeeText('Somebody else\'s');
 });
+
+it('finds conversations by a part of their title', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Planning the garden']);
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Tax return questions']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->set('search', 'garden')
+        ->assertSeeText('Planning the garden')
+        ->assertDontSeeText('Tax return questions');
+});
+
+it('says so when no title matches the search', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->create(['title' => 'Planning the garden']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->set('search', 'spaceship')
+        ->assertSeeText('No conversations found')
+        ->assertDontSeeText('No conversations yet')
+        ->assertDontSeeText('Planning the garden');
+});
+
+it('goes back to the first page when the search changes', function (): void {
+    $user = User::factory()->create();
+    ConversationFactory::new()->recycle($user)->count(11)->create(['title' => 'Planning the garden']);
+    actingAs($user);
+
+    livewire(Index::class)
+        ->call('gotoPage', 2)
+        ->set('search', 'garden')
+        ->assertSet('paginators.page', 1);
+});
+
+it('does not search the conversations of other users', function (): void {
+    ConversationFactory::new()->create(['title' => 'Planning the garden']);
+    actingAs(User::factory()->create());
+
+    livewire(Index::class)
+        ->set('search', 'garden')
+        ->assertDontSeeText('Planning the garden');
+});

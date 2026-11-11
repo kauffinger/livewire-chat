@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Settings\DeleteUserForm;
+use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -7,10 +9,15 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-test('profile page is displayed', function (): void {
+test('settings page is displayed', function (): void {
     $this->actingAs($user = User::factory()->create());
 
-    $this->get('/settings/profile')->assertOk();
+    $this->get('/settings')
+        ->assertOk()
+        ->assertSeeLivewire(Profile::class)
+        ->assertSeeLivewire(Password::class)
+        ->assertSeeLivewire(DeleteUserForm::class)
+        ->assertSeeText('Appearance');
 });
 
 test('profile information can be updated', function (): void {
