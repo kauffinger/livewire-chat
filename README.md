@@ -99,7 +99,7 @@ Open `/dashboard`. It redirects to your last conversation, or to a new one when 
 flowchart TB
     subgraph Browser
         Input["Message input"]
-        Markdown["markdownProcessor.js"]
+        Message["assistantMessage.js"]
     end
 
     subgraph Livewire
@@ -117,14 +117,14 @@ flowchart TB
     Provider["LLM provider"]
     Database[("agent_conversations and agent_conversation_messages")]
 
-    Input -- "sendMessage()" --> Show
+    Input -- "runAgent()" --> Show
     Show -- "stream()" --> Agent
     Agent <--> Provider
     Agent --> Tools
     Agent -- "stores each turn" --> Store
     Show -- "history and pending approvals" --> Store
     Store <--> Database
-    Show -- "wire:stream" --> Markdown
+    Show -- "stream events" --> Message
     Show -. "conversation-updated" .-> Sidebar
     Sidebar -- "User::conversations()" --> Database
     Index -- "User::conversations()" --> Database
@@ -138,7 +138,7 @@ flowchart TB
 - **`app/Livewire/Chats/Index.php`** - Paginate over all of your conversations
 - **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
 - **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
-- **`app/Actions/UpdateStreamDataFromAiEvent.php`** - Folds the AI SDK's stream events into the data the UI renders
+- **`resources/js/components/assistantMessage.js`** - Alpine component that renders an assistant message, stored or streaming
 
 ### The Agent
 
@@ -251,8 +251,7 @@ sequenceDiagram
     participant Store as ConversationStore
 
     User->>Browser: Types a message and presses Enter
-    Browser->>Show: sendMessage()
-    Show-->>Browser: Shows the pending message and calls runAgent()
+    Browser->>Browser: Shows the pending message
     Browser->>Show: runAgent()
     Show->>Agent: continueOrStart()->stream()
     Agent->>Store: Reads the conversation so far
@@ -261,7 +260,7 @@ sequenceDiagram
     loop Every stream event
         Provider-->>Agent: Text, reasoning, tool call or tool result
         Agent-->>Show: StreamEvent
-        Show-->>Browser: wire:stream to streamed-message
+        Show-->>Browser: Streams the event to the assistant message
     end
 
     Agent->>Store: Stores the user message and the assistant's turn
@@ -270,12 +269,12 @@ sequenceDiagram
 ```
 
 1. **User Input:** The user types a message and submits it
-2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
+2. **Pending Message:** The browser moves the message from the input into `pendingMessage`, which shows it right away, and calls `runAgent()` in the same request. This is the `send` JavaScript action at the bottom of `show.blade.php`
 3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
-4. **Stream Handling:** `UpdateStreamDataFromAiEvent` processes each event (text, reasoning, tool calls, results)
-5. **UI Updates:** Livewire streams update the interface in real-time. The stored messages live in a Livewire island, so sending a message does not render them again. `resources/js/components/markdownProcessor.js` morphs the reply instead of replacing it, and `resources/js/completeMarkdown.js` repairs unfinished markdown. When the turn ends before the reveal has caught up, the stored message continues it
+4. **Stream Handling:** `Chats\Show` streams each of the SDK's events (text, reasoning, tool calls, results) to the browser as it arrives
+5. **UI Updates:** The `assistantMessage` Alpine component adds each event to the reply it is showing. It morphs the reply instead of replacing it, and `resources/js/completeMarkdown.js` repairs unfinished markdown. The stored messages live in a Livewire island, so sending a message does not render them again. When the turn ends before the reveal has caught up, the stored message continues it
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
-7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
+7. **Stopping:** The `stop` JavaScript action cancels the streaming request and returns the message to the input, without another request. The SDK only stores a turn that completes, so a stopped reply is discarded
 8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
 
 Steps 3 to 5 are one loop in `Chats\Show`. Here it is without the error handling:
@@ -288,17 +287,8 @@ protected function streamAgent(Decisions|string $prompt): void
         ->continueOrStart($this->conversationId, as: Auth::user())
         ->stream($prompt);
 
-    $updateStreamData = new UpdateStreamDataFromAiEvent;
-    $streamData = $updateStreamData->initial();
-
     foreach ($stream as $event) {
-        $streamData = $updateStreamData->handle($streamData, $event);
-
-        $this->stream(
-            json_encode($streamData, JSON_HEX_TAG | JSON_HEX_AMP),
-            true,
-            to: 'streamed-message',
-        );
+        $this->stream(to: 'reply', content: $event->toArray());
     }
 
     $this->renderIsland('messages');
@@ -313,29 +303,37 @@ protected function streamAgent(Decisions|string $prompt): void
 }
 ```
 
-`UpdateStreamDataFromAiEvent` folds each event into one array with the text, the reasoning and the tool calls of the turn so far:
+Each event reaches the browser in the SDK's own format, for example `{"type": "text_delta", "delta": "Hello"}`. The streaming assistant message listens for them with a Livewire message interceptor and adds each one to the message it renders:
 
-```php
-// app/Actions/UpdateStreamDataFromAiEvent.php
-if ($event instanceof StreamStart && trim($streamData['text']) !== '') {
-    $streamData['text'] .= "\n\n";
-} elseif ($event instanceof TextDelta) {
-    $streamData['text'] .= $event->delta;
-} elseif ($event instanceof ReasoningDelta) {
-    $streamData['thinking'] .= $event->delta;
-} elseif ($event instanceof ToolCall) {
-    $streamData['toolCalls'][] = Arr::only($event->toolCall->toArray(), ['id', 'name', 'arguments']);
-} elseif ($event instanceof ToolResult) {
-    // Adds the result to the tool call it belongs to.
+```js
+// resources/js/components/assistantMessage.js
+this.$wire.$interceptMessage(({ onStream }) => {
+    onStream(({ json }) => this.receive(json.content));
+});
+
+receive(event) {
+    switch (event.type) {
+        case 'text_delta':
+            this.message.content += event.delta;
+            break;
+        case 'reasoning_delta':
+            this.message.reasoning += event.delta;
+            break;
+        case 'tool_call':
+            // Adds the tool call to the message.
+        case 'tool_result':
+            // Adds the result to the tool call it belongs to.
+    }
 }
 ```
 
-On the page, that array arrives in a hidden element. The `markdownProcessor` Alpine component watches it and renders the reply next to it:
+A stored message is the same component. It gets the whole message from Blade instead of from the stream:
 
 ```blade
-{{-- resources/views/components/chat/assistant-message.blade.php --}}
-<span x-ref="raw" class="hidden" wire:stream="streamed-message" wire:replace></span>
-<article wire:ignore x-ref="reply"></article>
+{{-- resources/views/livewire/chats/show.blade.php --}}
+<x-chat.assistant-message :message="$message" />
+
+<x-chat.assistant-message streaming />
 ```
 
 ## Tools
@@ -481,8 +479,7 @@ it('allows sending messages', function (): void {
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent')
         ->assertDispatched('conversation-updated');
 

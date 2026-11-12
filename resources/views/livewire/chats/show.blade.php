@@ -1,17 +1,13 @@
-@php
-    $isEmpty = $conversationId === null && $pendingMessage === '';
-@endphp
-
 <div
-    @class([
-        'flex h-[calc(100dvh-6.5rem)] flex-col lg:h-[calc(100dvh-4rem)]',
-        'justify-center gap-8 pb-[12dvh]' => $isEmpty,
-        'gap-4' => ! $isEmpty,
-    ])
+    class="flex h-[calc(100dvh-6.5rem)] flex-col gap-4 data-empty:justify-center data-empty:gap-8 data-empty:pb-[12dvh] lg:h-[calc(100dvh-4rem)]"
+    @if ($conversationId === null)
+        data-empty
+        x-bind:data-empty="$wire.pendingMessage === ''"
+    @endif
 >
-    @if ($isEmpty)
+    @if ($conversationId === null)
         {{-- flux:heading leaves a Livewire block marker behind it. Outside this wrapper, the marker makes the morph re-insert the message input, which drops its focus. --}}
-        <div wire:key="greeting">
+        <div wire:key="greeting" class="hidden in-data-empty:block">
             <flux:heading level="1" class="text-center text-3xl! font-medium! tracking-tight text-balance sm:text-4xl!">
                 {{ __('What can I help you with?') }}
             </flux:heading>
@@ -20,7 +16,7 @@
 
     <div
         wire:key="conversation"
-        @class(['relative min-h-0 flex-1', 'hidden' => $isEmpty, 'flex' => ! $isEmpty])
+        class="relative flex min-h-0 flex-1 in-data-empty:hidden"
         x-data="{ isScrolledUp: false }"
     >
         <div
@@ -52,23 +48,22 @@
                     @endforeach
                 @endisland
 
-                @if ($pendingMessage !== '')
-                    <div wire:key="pending-user-message" class="motion-safe:animate-message-in">
-                        <x-chat.user-message :message="['content' => $pendingMessage]" />
-                    </div>
-                @endif
+                <div
+                    wire:key="pending-user-message"
+                    wire:show="pendingMessage !== ''"
+                    class="motion-safe:animate-message-in"
+                    style="display: none"
+                >
+                    <x-chat.user-message wire:text="pendingMessage" class="whitespace-pre-line" />
+                </div>
 
                 <div
                     wire:loading.block
                     wire:target="runAgent, approveToolCalls, rejectToolCalls"
-                    wire:key="streaming-message-{{ $streamedTurns }}"
+                    wire:key="streaming-message"
                     class="motion-safe:animate-message-in hidden"
                 >
-                    <x-chat.assistant-message
-                        :is-loading="true"
-                        wire-stream="streamed-message"
-                        :wire-replace="true"
-                    />
+                    <x-chat.assistant-message streaming />
                 </div>
             </div>
         </div>
@@ -103,8 +98,11 @@
         </div>
     @endif
 
-    @if ($isEmpty)
-        <div wire:key="suggestions" class="mx-auto w-full max-w-3xl divide-y divide-zinc-200 px-2 dark:divide-white/10">
+    @if ($conversationId === null)
+        <div
+            wire:key="suggestions"
+            class="mx-auto hidden w-full max-w-3xl divide-y divide-zinc-200 px-2 in-data-empty:block dark:divide-white/10"
+        >
             @foreach ([__('Add 12.5 and 30 with the sum tool'), __('Change my profile name to Ada Lovelace'), __('Explain Livewire islands in three sentences')] as $suggestion)
                 <div class="py-1">
                     <flux:button
@@ -113,7 +111,7 @@
                         class="w-full justify-start! font-normal!"
                         x-on:click="
                             $wire.newMessage = {{ Js::from($suggestion) }};
-                            $wire.sendMessage()
+                            $wire.$js.send()
                         "
                     >
                         {{ $suggestion }}
@@ -123,3 +121,37 @@
         </div>
     @endif
 </div>
+
+@script
+    <script>
+        let cancelReply = () => {};
+
+        $wire.$intercept('runAgent', ({ action }) => {
+            cancelReply = () => action.cancel();
+        });
+
+        $js.send = () => {
+            const send = () => {
+                $wire.pendingMessage = $wire.newMessage.trim();
+                $wire.newMessage = '';
+                $wire.runAgent();
+            };
+
+            if ($wire.conversationId === null && document.startViewTransition) {
+                document.startViewTransition(send);
+            } else {
+                send();
+            }
+
+            matchMedia('(pointer: fine)').matches && $wire.$refs.input.focus();
+        };
+
+        $js.stop = () => {
+            cancelReply();
+
+            $wire.newMessage = $wire.pendingMessage;
+            $wire.pendingMessage = '';
+            $wire.$refs.input.focus();
+        };
+    </script>
+@endscript

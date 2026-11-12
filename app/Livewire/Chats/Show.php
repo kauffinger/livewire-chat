@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Chats;
 
-use App\Actions\UpdateStreamDataFromAiEvent;
 use App\Ai\Agents\ChatAgent;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -30,14 +29,10 @@ class Show extends Component
 
     public string $newMessage = '';
 
-    #[Locked]
     public string $pendingMessage = '';
 
     #[Locked]
     public int $messagesPerPage = 20;
-
-    #[Locked]
-    public int $streamedTurns = 0;
 
     public function mount(?Conversation $conversation = null): void
     {
@@ -62,7 +57,7 @@ class Show extends Component
     }
 
     /**
-     * @return list<array{id: string, role: string, content: string, thinking: string, toolCalls: list<array<string, mixed>>, failed: bool}>
+     * @return list<array{id: string, role: string, content: string, reasoning: string, toolCalls: list<array<string, mixed>>, failed: bool}>
      */
     #[Computed]
     public function messages(): array
@@ -73,7 +68,7 @@ class Show extends Component
                 'id' => $message->id,
                 'role' => $message->role,
                 'content' => $message->content,
-                'thinking' => collect($message->steps)->pluck('reasoning')->filter()->implode("\n\n"),
+                'reasoning' => collect($message->steps)->pluck('reasoning')->filter()->implode("\n\n"),
                 'toolCalls' => $message->toolCalls(),
                 'failed' => $message->status === MessageStatus::Failed,
             ])
@@ -99,38 +94,17 @@ class Show extends Component
         $this->messagesPerPage += 20;
     }
 
-    public function sendMessage(): void
-    {
-        $message = trim($this->newMessage);
-
-        if ($message === '' || $this->pendingApprovals !== []) {
-            return;
-        }
-
-        $this->pendingMessage = $message;
-        $this->newMessage = '';
-
-        $this->js('$wire.runAgent()');
-    }
-
     public function runAgent(): void
     {
-        if ($this->pendingMessage === '') {
+        $message = trim($this->pendingMessage);
+
+        if ($message === '' || $this->pendingApprovals !== []) {
+            $this->pendingMessage = '';
+
             return;
         }
 
-        $this->streamAgent($this->pendingMessage);
-    }
-
-    public function stopAgent(): void
-    {
-        if ($this->pendingMessage === '') {
-            return;
-        }
-
-        $this->newMessage = $this->pendingMessage;
-        $this->pendingMessage = '';
-        $this->streamedTurns++;
+        $this->streamAgent($message);
     }
 
     public function approveToolCalls(): void
@@ -162,24 +136,14 @@ class Show extends Component
             ->continueOrStart($this->conversationId, as: Auth::user())
             ->stream($prompt);
 
-        $updateStreamData = new UpdateStreamDataFromAiEvent;
-        $streamData = $updateStreamData->initial();
-
         try {
             foreach ($stream as $event) {
-                $streamData = $updateStreamData->handle($streamData, $event);
-
-                // wire:stream writes its content to the page as HTML, so the tags in the reply must stay escaped.
-                $this->stream(
-                    json_encode($streamData, JSON_HEX_TAG | JSON_HEX_AMP),
-                    true,
-                    to: 'streamed-message',
-                );
+                $this->stream(to: 'reply', content: $event->toArray());
             }
         } catch (Throwable $exception) {
             report($exception);
 
-            $this->newMessage = $this->pendingMessage;
+            $this->newMessage = $this->pull('pendingMessage');
 
             Flux::toast(
                 variant: 'danger',
@@ -189,18 +153,18 @@ class Show extends Component
 
             return;
         } finally {
-            $this->pendingMessage = '';
-            $this->streamedTurns++;
-
             unset($this->history, $this->messages, $this->pendingApprovals);
             $this->renderIsland('messages');
         }
 
+        // A new conversation keeps its pending message on screen until its own page takes over.
         if ($this->conversationId === null) {
             $this->redirectRoute('conversation.show', $stream->conversationId, navigate: true);
 
             return;
         }
+
+        $this->pendingMessage = '';
 
         $this->dispatch('conversation-updated');
     }

@@ -1,8 +1,6 @@
 @props([
-    'message' => [],
-    'isLoading' => false,
-    'wireStream' => null,
-    'wireReplace' => false,
+    'message' => ['content' => '', 'reasoning' => '', 'toolCalls' => []],
+    'streaming' => false,
 ])
 
 @php
@@ -10,38 +8,40 @@
     $detailClasses = 'min-w-0 font-mono text-[0.8125rem] leading-6 break-words whitespace-pre-wrap text-zinc-800 dark:text-zinc-200';
 @endphp
 
+{{-- Alpine reads the message once, so a stored message that changes, like a turn resumed after an approval, needs a new key. --}}
 <div
+    wire:key="{{ md5(json_encode($message)) }}"
     class="w-full space-y-3"
-    x-data="markdownProcessor(@js(['copy' => __('Copy'), 'copied' => __('Copied'), 'thinking' => __('Thinking…'), 'runningTool' => __('Running :tool…')]), @js($isLoading))"
+    x-data="assistantMessage(@js($message), @js(['copy' => __('Copy'), 'copied' => __('Copied'), 'thinking' => __('Thinking…'), 'runningTool' => __('Running :tool…')]), @js($streaming))"
     x-on:click="copyCode($event)"
 >
-    <div x-show="hasThinking()">
+    <div x-show="message.reasoning.trim() !== ''">
         <button
             type="button"
             class="{{ $disclosureClasses }}"
-            x-on:click="toggleThinking()"
-            x-bind:aria-expanded="showThinking"
+            x-on:click="showReasoning = ! showReasoning"
+            x-bind:aria-expanded="showReasoning"
         >
             <flux:icon.light-bulb variant="mini" />
             <span>{{ __('Reasoning') }}</span>
             <flux:icon.chevron-right
                 variant="micro"
                 class="transition-transform"
-                x-bind:class="showThinking && 'rotate-90'"
+                x-bind:class="showReasoning && 'rotate-90'"
             />
         </button>
 
-        <div x-show="showThinking" x-collapse>
+        <div x-show="showReasoning" x-collapse>
             <article
                 wire:ignore
                 class="prose prose-sm prose-zinc prose-chat dark:prose-invert max-w-none pt-2 text-zinc-500 dark:text-zinc-400"
-                x-html="thinkingHtml"
+                x-html="reasoningHtml"
             ></article>
         </div>
     </div>
 
-    <div x-show="hasToolCalls()" class="space-y-2">
-        <template x-for="toolCall in streamData.toolCalls" :key="toolCall.id">
+    <div x-show="message.toolCalls.length > 0" class="space-y-2">
+        <template x-for="toolCall in message.toolCalls" :key="toolCall.id">
             <div x-data="{ isOpen: false }">
                 <button
                     type="button"
@@ -49,7 +49,7 @@
                     x-on:click="isOpen = ! isOpen"
                     x-bind:aria-expanded="isOpen"
                 >
-                    @if ($isLoading)
+                    @if ($streaming)
                         <flux:icon.loading class="size-5" x-show="! ('result' in toolCall)" />
                     @else
                         <flux:icon.wrench-screwdriver variant="mini" x-show="! ('result' in toolCall)" />
@@ -93,33 +93,21 @@
         </template>
     </div>
 
-    <span
-        x-ref="raw"
-        class="hidden"
-        @if ($wireStream)
-            wire:stream="{{ $wireStream }}"
-        @endif
-        @if ($wireReplace)
-            wire:replace
-        @endif
-    >
-        {{ $isLoading ? '' : json_encode(['text' => $message['content'] ?? '', 'thinking' => $message['thinking'] ?? '', 'toolCalls' => $message['toolCalls'] ?? []]) }}
-    </span>
     <article
         wire:ignore
         class="prose prose-zinc prose-chat dark:prose-invert max-w-none min-w-0"
         x-ref="reply"
-        x-show="html.length > 0"
-        @if ($isLoading)
+        x-show="message.content.trim() !== ''"
+        @if ($streaming)
             data-reveal
         @endif
     ></article>
 
-    @if ($isLoading)
+    @if ($streaming)
         <div
             role="status"
             class="flex min-w-0 items-center gap-2.5 text-zinc-500 dark:text-zinc-400"
-            x-show="! isWriting() || html.length === 0"
+            x-show="! isWriting() || message.content.trim() === ''"
         >
             <span class="motion-safe:animate-status-pulse size-2.5 shrink-0 rounded-full bg-current"></span>
             <template x-for="label in [status()]" :key="label">
@@ -137,7 +125,7 @@
         />
     @endif
 
-    @unless ($isLoading)
+    @unless ($streaming)
         <flux:button
             size="xs"
             variant="ghost"
@@ -145,7 +133,7 @@
             class="-ms-1 text-zinc-400! hover:text-zinc-800! dark:hover:text-white!"
             :tooltip="__('Copy')"
             aria-label="{{ __('Copy') }}"
-            x-show="streamData.text.trim() !== ''"
+            x-show="message.content.trim() !== ''"
             x-on:click="copy()"
         >
             <flux:icon.clipboard variant="micro" x-show="! copied" />

@@ -15,6 +15,14 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Livewire\livewire;
 
+beforeEach(function (): void {
+    ob_start(fn (string $output): string => preg_replace('/\{"stream":true.*?"endStream":true\}/', '', $output));
+});
+
+afterEach(function (): void {
+    ob_end_flush();
+});
+
 it('renders the conversation page for its owner', function (): void {
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()
@@ -106,13 +114,9 @@ it('allows sending messages', function (): void {
     actingAs($user);
 
     $component = livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
-        ->assertSet('newMessage', '')
-        ->assertSet('pendingMessage', 'Hello, world!')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent')
         ->assertSet('pendingMessage', '')
-        ->assertSeeHtml('wire:key="streaming-message-1"')
         ->assertDispatched('conversation-updated');
 
     expect($component->effects['islandFragments'])
@@ -132,30 +136,36 @@ it('allows sending messages', function (): void {
 });
 
 it('does not send empty messages', function (): void {
+    ChatAgent::fake();
+
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()->recycle($user)->create();
 
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', '')
-        ->call('sendMessage')
+        ->set('pendingMessage', '   ')
+        ->call('runAgent')
         ->assertSet('pendingMessage', '');
+
+    ChatAgent::assertNeverPrompted();
 });
 
 it('trims whitespace from messages', function (): void {
+    ChatAgent::fake();
+
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()->recycle($user)->create();
 
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', '   ')
-        ->call('sendMessage')
-        ->assertSet('pendingMessage', '')
-        ->set('newMessage', '  Hello, world!  ')
-        ->call('sendMessage')
-        ->assertSet('pendingMessage', 'Hello, world!');
+        ->set('pendingMessage', '  Hello, world!  ')
+        ->call('runAgent');
+
+    ChatAgent::assertPrompted('Hello, world!');
+
+    expect($conversation->messages()->orderBy('id')->first()->content)->toBe('Hello, world!');
 });
 
 it('does not run the agent without a pending message', function (): void {
@@ -170,40 +180,6 @@ it('does not run the agent without a pending message', function (): void {
         ->call('runAgent');
 
     ChatAgent::assertNeverPrompted();
-});
-
-it('gives the message back when the reply is stopped', function (): void {
-    ChatAgent::fake();
-
-    $user = User::factory()->create();
-    $conversation = ConversationFactory::new()->recycle($user)->create();
-
-    actingAs($user);
-
-    livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
-        ->assertSeeHtml('wire:key="pending-user-message"')
-        ->call('stopAgent')
-        ->assertSet('newMessage', 'Hello, world!')
-        ->assertSet('pendingMessage', '')
-        ->assertDontSeeHtml('wire:key="pending-user-message"')
-        ->assertSeeHtml('wire:key="streaming-message-1"');
-
-    ChatAgent::assertNeverPrompted();
-});
-
-it('keeps the typed message when no reply is running to stop', function (): void {
-    $user = User::factory()->create();
-    $conversation = ConversationFactory::new()->recycle($user)->create();
-
-    actingAs($user);
-
-    livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Still typing')
-        ->call('stopAgent')
-        ->assertSet('newMessage', 'Still typing')
-        ->assertSeeHtml('wire:key="streaming-message-0"');
 });
 
 it('renders the new conversation page', function (): void {
@@ -248,13 +224,14 @@ it('starts a conversation with the first message', function (): void {
     actingAs($user);
 
     $component = livewire(Show::class)
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent');
 
     $conversation = $user->conversations()->sole();
 
-    $component->assertRedirect(route('conversation.show', $conversation));
+    $component
+        ->assertRedirect(route('conversation.show', $conversation))
+        ->assertSet('pendingMessage', 'Hello, world!');
 
     expect($conversation->title)->toBe('Hello, world!')
         ->and($conversation->messages()->orderBy('id')->pluck('content')->all())
@@ -271,8 +248,7 @@ it('gives the message back when the assistant fails', function (): void {
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent')
         ->assertSet('newMessage', 'Hello, world!')
         ->assertSet('pendingMessage', '')
@@ -288,8 +264,8 @@ it('gives the message back when the assistant fails', function (): void {
     expect($conversation->messages()->count())->toBe(0);
 });
 
-it('escapes html in the reply while it streams', function (): void {
-    ChatAgent::fake(['<img src=x onerror=alert(1)> & more']);
+it('streams the events of the reply to the browser', function (): void {
+    ChatAgent::fake(['Hello, human!']);
 
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()->recycle($user)->create();
@@ -305,16 +281,31 @@ it('escapes html in the reply while it streams', function (): void {
     });
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Show me an image tag.')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent');
 
     ob_end_clean();
 
     expect($streamed)
-        ->toContain('u003Cimg')
-        ->toContain('u0026')
-        ->not->toContain('<img');
+        ->toContain('"type":"stream_start"')
+        ->toContain('"type":"text_delta"')
+        ->toContain('"type":"stream_end"');
+});
+
+it('escapes html in a stored reply', function (): void {
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    ConversationMessageFactory::new()->for($conversation)->assistant()->create([
+        'content' => '<img src=x onerror=alert(1)> & more',
+    ]);
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->assertSeeHtml('u003Cimg')
+        ->assertSeeHtml('u0026')
+        ->assertDontSeeHtml('<img src=x');
 });
 
 it('keeps the line breaks of a user message and escapes its html', function (): void {
@@ -366,19 +357,12 @@ it('renders stable message keys and keeps pending messages flush with history', 
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->assertDontSeeHtml('wire:key="pending-user-message"')
-        ->assertSeeHtmlInOrder([
-            sprintf('wire:key="message-%s"', $historyUserMessage->id),
-            sprintf('wire:key="message-%s"', $historyAssistantMessage->id),
-            'wire:key="streaming-message-0"',
-        ])
-        ->set('newMessage', 'Pending follow-up question')
-        ->call('sendMessage')
         ->assertSeeHtmlInOrder([
             'name=messages',
+            sprintf('wire:key="message-%s"', $historyUserMessage->id),
+            sprintf('wire:key="message-%s"', $historyAssistantMessage->id),
             'wire:key="pending-user-message"',
-            'Pending follow-up question',
-            'wire:key="streaming-message-0"',
+            'wire:key="streaming-message"',
         ])
         ->assertDontSeeHtml('flex-1 flex w-full flex-row justify-start');
 });
@@ -403,7 +387,7 @@ it('shows the tool calls of stored assistant messages', function (): void {
     actingAs($user);
 
     $component = livewire(Show::class, ['conversation' => $conversation])
-        ->assertSee('"name":"Sum"');
+        ->assertSee('Sum');
 
     expect($component->get('messages')[0]['toolCalls'])
         ->toHaveCount(1)
@@ -491,17 +475,18 @@ it('asks for approval before a tool call that needs it', function (): void {
 
     livewire(Show::class, ['conversation' => $conversation])
         ->assertSeeHtml('wire:model="newMessage"')
-        ->set('newMessage', 'Call me Ada King.')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Call me Ada King.')
         ->call('runAgent')
         ->assertSeeText('Approval needed')
         ->assertSeeText('UpdateProfileName')
         ->assertSeeText('This will change the name on your profile.')
         ->assertSeeText('Ada King')
         ->assertDontSeeHtml('wire:model="newMessage"')
-        ->set('newMessage', 'Never mind.')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Never mind.')
+        ->call('runAgent')
         ->assertSet('pendingMessage', '');
+
+    ChatAgent::assertNotPrompted('Never mind.');
 });
 
 it('resumes the turn with the decision on its tool calls', function (string $action, bool $approved): void {
@@ -518,8 +503,7 @@ it('resumes the turn with the decision on its tool calls', function (string $act
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Call me Ada King.')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Call me Ada King.')
         ->call('runAgent')
         ->call($action)
         ->assertDontSeeText('Approval needed')
