@@ -21,8 +21,21 @@ export default function assistantMessage(message, labels, isStreaming = false) {
 
         init() {
             if (isStreaming) {
-                this.stopListening = this.$wire.$interceptMessage(({ onStream }) => {
-                    onStream(({ json }) => this.receive(json.content));
+                this.stopListening = this.$wire.$interceptMessage(({ onStream, onFinish }) => {
+                    // Earlier messages load in a request of their own, which can finish while a reply streams.
+                    let hasStreamed = false;
+
+                    onStream(({ json }) => {
+                        hasStreamed = true;
+
+                        this.receive(json.content);
+                    });
+
+                    onFinish(() => {
+                        if (hasStreamed) {
+                            this.clear();
+                        }
+                    });
                 });
             } else if (this.continuesUnfinishedReveal()) {
                 this.continueReveal();
@@ -69,6 +82,13 @@ export default function assistantMessage(message, labels, isStreaming = false) {
             this.activity = event.type;
 
             this.reveal();
+        },
+
+        clear() {
+            Object.assign(this.message, { content: '', reasoning: '', toolCalls: [] });
+            Object.assign(this, { activity: null, showReasoning: false, revealedLength: 0 });
+
+            this.paint('');
         },
 
         continuesUnfinishedReveal() {

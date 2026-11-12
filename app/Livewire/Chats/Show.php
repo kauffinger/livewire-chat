@@ -29,14 +29,10 @@ class Show extends Component
 
     public string $newMessage = '';
 
-    #[Locked]
     public string $pendingMessage = '';
 
     #[Locked]
     public int $messagesPerPage = 20;
-
-    #[Locked]
-    public int $streamedTurns = 0;
 
     public function mount(?Conversation $conversation = null): void
     {
@@ -98,38 +94,17 @@ class Show extends Component
         $this->messagesPerPage += 20;
     }
 
-    public function sendMessage(): void
-    {
-        $message = trim($this->newMessage);
-
-        if ($message === '' || $this->pendingApprovals !== []) {
-            return;
-        }
-
-        $this->pendingMessage = $message;
-        $this->newMessage = '';
-
-        $this->js('$wire.runAgent()');
-    }
-
     public function runAgent(): void
     {
-        if ($this->pendingMessage === '') {
+        $message = trim($this->pendingMessage);
+
+        if ($message === '' || $this->pendingApprovals !== []) {
+            $this->pendingMessage = '';
+
             return;
         }
 
-        $this->streamAgent($this->pendingMessage);
-    }
-
-    public function stopAgent(): void
-    {
-        if ($this->pendingMessage === '') {
-            return;
-        }
-
-        $this->newMessage = $this->pendingMessage;
-        $this->pendingMessage = '';
-        $this->streamedTurns++;
+        $this->streamAgent($message);
     }
 
     public function approveToolCalls(): void
@@ -168,7 +143,7 @@ class Show extends Component
         } catch (Throwable $exception) {
             report($exception);
 
-            $this->newMessage = $this->pendingMessage;
+            $this->newMessage = $this->pull('pendingMessage');
 
             Flux::toast(
                 variant: 'danger',
@@ -178,18 +153,18 @@ class Show extends Component
 
             return;
         } finally {
-            $this->pendingMessage = '';
-            $this->streamedTurns++;
-
             unset($this->history, $this->messages, $this->pendingApprovals);
             $this->renderIsland('messages');
         }
 
+        // A new conversation keeps its pending message on screen until its own page takes over.
         if ($this->conversationId === null) {
             $this->redirectRoute('conversation.show', $stream->conversationId, navigate: true);
 
             return;
         }
+
+        $this->pendingMessage = '';
 
         $this->dispatch('conversation-updated');
     }

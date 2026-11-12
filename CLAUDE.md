@@ -32,7 +32,7 @@ npm run build
 - **`app/Ai/Agents/ChatAgent.php`** - The agent: instructions, tools, and conversation memory
 - **`app/Livewire/Chats/Show.php`** - Main chat component handling LLM streaming and message display
 - **`app/Livewire/ChatSidebar.php`** - Conversation navigation and history
-- **Message flow**: User input → `sendMessage()` → `runAgent()` → `ChatAgent` streaming → real-time UI updates via Livewire streams
+- **Message flow**: User input → the `send` JavaScript action shows the pending message → `runAgent()` → `ChatAgent` streaming → real-time UI updates via Livewire streams
 - **Conversations**: The AI SDK creates and titles a conversation on its first message. `Chats\Show` reads history and pending tool approvals through the SDK's `ConversationStore`
 - **Tool approval**: `Approvable` tools pause the turn; `approveToolCalls()` and `rejectToolCalls()` resume it
 

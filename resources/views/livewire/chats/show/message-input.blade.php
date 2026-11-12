@@ -1,33 +1,16 @@
 <div
     wire:key="message-input"
-    @if ($conversationId === null && $streamedTurns === 0)
-        wire:transition="message-input"
+    @if ($conversationId === null)
+        style="view-transition-name: message-input"
     @endif
     class="mx-auto w-full max-w-3xl shrink-0"
-    x-data="{
-        stop: () => {},
-        init() {
-            this.removeInterceptor = $wire.$intercept('runAgent', ({ action }) => {
-                matchMedia('(pointer: fine)').matches && this.$refs.input.focus();
-
-                this.stop = () => {
-                    action.cancel();
-                    $wire.stopAgent();
-                    this.$refs.input.focus();
-                };
-            });
-        },
-        destroy() {
-            this.removeInterceptor();
-        },
-    }"
 >
     <div
         class="cursor-text rounded-3xl border border-zinc-200 bg-white shadow-sm focus-within:border-zinc-400 focus-within:shadow-md dark:border-white/10 dark:bg-zinc-700/50 dark:focus-within:border-white/30"
-        x-on:click="$event.target.closest('button') || $refs.input.focus()"
+        x-on:click="$event.target.closest('button') || $wire.$refs.input.focus()"
     >
         <flux:textarea
-            x-ref="input"
+            wire:ref="input"
             wire:model="newMessage"
             rows="auto"
             resize="none"
@@ -38,7 +21,7 @@
             x-on:keydown.enter="
                 if (! $event.shiftKey && ! $event.isComposing) {
                     $event.preventDefault();
-                    $refs.send.click();
+                    $wire.$refs.send.click();
                 }
             "
         />
@@ -56,7 +39,7 @@
 
             <div class="ms-auto flex shrink-0">
                 <flux:button
-                    x-ref="send"
+                    wire:ref="send"
                     size="sm"
                     variant="primary"
                     icon="arrow-up"
@@ -64,8 +47,8 @@
                     :tooltip="__('Send')"
                     tooltip:kbd="Enter"
                     aria-label="{{ __('Send') }}"
-                    wire:click="sendMessage"
                     x-show="$wire.pendingMessage === ''"
+                    x-on:click="$wire.$js.send()"
                     x-bind:disabled="$wire.newMessage.trim() === '' || $wire.pendingMessage !== ''"
                 />
 
@@ -78,7 +61,7 @@
                     :tooltip="__('Stop')"
                     aria-label="{{ __('Stop') }}"
                     x-show="$wire.pendingMessage !== ''"
-                    x-on:click="stop()"
+                    x-on:click="$wire.$js.stop()"
                 />
             </div>
         </div>

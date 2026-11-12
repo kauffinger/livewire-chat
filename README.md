@@ -117,7 +117,7 @@ flowchart TB
     Provider["LLM provider"]
     Database[("agent_conversations and agent_conversation_messages")]
 
-    Input -- "sendMessage()" --> Show
+    Input -- "runAgent()" --> Show
     Show -- "stream()" --> Agent
     Agent <--> Provider
     Agent --> Tools
@@ -251,8 +251,7 @@ sequenceDiagram
     participant Store as ConversationStore
 
     User->>Browser: Types a message and presses Enter
-    Browser->>Show: sendMessage()
-    Show-->>Browser: Shows the pending message and calls runAgent()
+    Browser->>Browser: Shows the pending message
     Browser->>Show: runAgent()
     Show->>Agent: continueOrStart()->stream()
     Agent->>Store: Reads the conversation so far
@@ -270,12 +269,12 @@ sequenceDiagram
 ```
 
 1. **User Input:** The user types a message and submits it
-2. **Pending Message:** `sendMessage()` shows the message right away and kicks off `runAgent()`
+2. **Pending Message:** The browser moves the message from the input into `pendingMessage`, which shows it right away, and calls `runAgent()` in the same request. This is the `send` JavaScript action at the bottom of `show.blade.php`
 3. **LLM Streaming:** `runAgent()` continues the conversation with `ChatAgent`, or starts one, and streams the response
 4. **Stream Handling:** `Chats\Show` streams each of the SDK's events (text, reasoning, tool calls, results) to the browser as it arrives
 5. **UI Updates:** The `assistantMessage` Alpine component adds each event to the reply it is showing. It morphs the reply instead of replacing it, and `resources/js/completeMarkdown.js` repairs unfinished markdown. The stored messages live in a Livewire island, so sending a message does not render them again. When the turn ends before the reveal has caught up, the stored message continues it
 6. **Persistence:** The AI SDK stores the user message and the assistant's turn when the response completes
-7. **Stopping:** The stop button cancels the streaming request and calls `stopAgent()`, which returns the message to the input. The SDK only stores a turn that completes, so a stopped reply is discarded
+7. **Stopping:** The `stop` JavaScript action cancels the streaming request and returns the message to the input, without another request. The SDK only stores a turn that completes, so a stopped reply is discarded
 8. **Failures:** If the provider fails, the message returns to the input and a toast tells the user. A turn that failed after running tools is kept by the SDK and marked in the history
 
 Steps 3 to 5 are one loop in `Chats\Show`. Here it is without the error handling:
@@ -480,8 +479,7 @@ it('allows sending messages', function (): void {
     actingAs($user);
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Hello, world!')
-        ->call('sendMessage')
+        ->set('pendingMessage', 'Hello, world!')
         ->call('runAgent')
         ->assertDispatched('conversation-updated');
 
