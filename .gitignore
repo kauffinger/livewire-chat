@@ -25,3 +25,5 @@ yarn-error.log
 .claude/*
 .codex/*
 .DS_Store
+/tests/Browser/Screenshots
+/tests/Browser/Traces

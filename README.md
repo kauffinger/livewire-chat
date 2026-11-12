@@ -505,6 +505,15 @@ ChatAgent::fake([
 ]);
 ```
 
+Browser tests in `tests/Browser` drive Chrome through [Pest's browser plugin](https://pestphp.com/docs/browser-testing) and cover what only runs in JavaScript: sending with Enter, the rendered markdown, tool call details and loading earlier messages. They run with the rest of the suite and need Playwright's Chromium and built assets:
+
+```bash
+npx playwright install chromium
+npm run build
+```
+
+Pest's test server hands a streamed reply to the browser in one piece, so the browser tests check the finished turn rather than the token stream.
+
 The tests run with Pest. PHP is formatted with Laravel Pint and Rector, and JavaScript, CSS and Blade with Prettier:
 
 ```bash

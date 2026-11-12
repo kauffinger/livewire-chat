@@ -29,7 +29,7 @@ Read this section before you write a test.
 - Leave framework behavior to framework tests. Testing project configuration is not testing the framework. A constrained relationship, cast, scope, or validation rule belongs to this project.
 - Keep every test that can detect a distinct defect. When two tests detect the same defect, trim the higher-layer test to one case and report the duplication. Do not delete an existing test.
 - Write a feature test first. Write a unit test only for logic that does not use the framework.
-- Write a feature test for every behavior reachable through a request. Real-browser tests require `pestphp/pest-plugin-browser` and a browser download, neither of which this project installs. Mention the package only if the user asks for a real-browser test.
+- Write a browser test only for behavior in JavaScript that a feature test cannot reach. Put a browser test in `tests/Browser`, and call `assertNoJavaScriptErrors()` in it.
 - Judge an architecture test by the convention it protects, not by the rules above. An `arch()` test declares a rule for an entire directory, such as the parent class of every model, the classes that may use an enum, or the methods every factory declares. It intentionally checks declarations and fails when a new file breaks the convention.
 - Use the test tools that the project installs. Add a new test dependency, plugin, or browser only after the user asks for it.
 
