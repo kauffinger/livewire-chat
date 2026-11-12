@@ -64,11 +64,7 @@
                     wire:key="streaming-message-{{ $streamedTurns }}"
                     class="motion-safe:animate-message-in hidden"
                 >
-                    <x-chat.assistant-message
-                        :is-loading="true"
-                        wire-stream="streamed-message"
-                        :wire-replace="true"
-                    />
+                    <x-chat.assistant-message streaming />
                 </div>
             </div>
         </div>

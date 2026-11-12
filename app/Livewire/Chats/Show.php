@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Chats;
 
-use App\Actions\UpdateStreamDataFromAiEvent;
 use App\Ai\Agents\ChatAgent;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -162,19 +161,9 @@ class Show extends Component
             ->continueOrStart($this->conversationId, as: Auth::user())
             ->stream($prompt);
 
-        $updateStreamData = new UpdateStreamDataFromAiEvent;
-        $streamData = $updateStreamData->initial();
-
         try {
             foreach ($stream as $event) {
-                $streamData = $updateStreamData->handle($streamData, $event);
-
-                // wire:stream writes its content to the page as HTML, so the tags in the reply must stay escaped.
-                $this->stream(
-                    json_encode($streamData, JSON_HEX_TAG | JSON_HEX_AMP),
-                    true,
-                    to: 'streamed-message',
-                );
+                $this->stream(to: 'reply', content: $event->toArray());
             }
         } catch (Throwable $exception) {
             report($exception);

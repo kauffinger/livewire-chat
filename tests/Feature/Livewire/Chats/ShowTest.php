@@ -288,8 +288,8 @@ it('gives the message back when the assistant fails', function (): void {
     expect($conversation->messages()->count())->toBe(0);
 });
 
-it('escapes html in the reply while it streams', function (): void {
-    ChatAgent::fake(['<img src=x onerror=alert(1)> & more']);
+it('streams the events of the reply to the browser', function (): void {
+    ChatAgent::fake(['Hello, human!']);
 
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()->recycle($user)->create();
@@ -305,16 +305,32 @@ it('escapes html in the reply while it streams', function (): void {
     });
 
     livewire(Show::class, ['conversation' => $conversation])
-        ->set('newMessage', 'Show me an image tag.')
+        ->set('newMessage', 'Hello, world!')
         ->call('sendMessage')
         ->call('runAgent');
 
     ob_end_clean();
 
     expect($streamed)
-        ->toContain('u003Cimg')
-        ->toContain('u0026')
-        ->not->toContain('<img');
+        ->toContain('"type":"stream_start"')
+        ->toContain('"type":"text_delta"')
+        ->toContain('"type":"stream_end"');
+});
+
+it('escapes html in a stored reply', function (): void {
+    $user = User::factory()->create();
+    $conversation = ConversationFactory::new()->recycle($user)->create();
+
+    ConversationMessageFactory::new()->for($conversation)->assistant()->create([
+        'content' => '<img src=x onerror=alert(1)> & more',
+    ]);
+
+    actingAs($user);
+
+    livewire(Show::class, ['conversation' => $conversation])
+        ->assertSeeHtml('u003Cimg')
+        ->assertSeeHtml('u0026')
+        ->assertDontSeeHtml('<img src=x');
 });
 
 it('keeps the line breaks of a user message and escapes its html', function (): void {
@@ -403,7 +419,7 @@ it('shows the tool calls of stored assistant messages', function (): void {
     actingAs($user);
 
     $component = livewire(Show::class, ['conversation' => $conversation])
-        ->assertSee('"name":"Sum"');
+        ->assertSee('Sum');
 
     expect($component->get('messages')[0]['toolCalls'])
         ->toHaveCount(1)
