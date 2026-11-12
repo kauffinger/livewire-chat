@@ -7,7 +7,7 @@
     x-data="{
         stop: () => {},
         init() {
-            $wire.$intercept('runAgent', ({ action }) => {
+            this.removeInterceptor = $wire.$intercept('runAgent', ({ action }) => {
                 matchMedia('(pointer: fine)').matches && this.$refs.input.focus();
 
                 this.stop = () => {
@@ -16,6 +16,9 @@
                     this.$refs.input.focus();
                 };
             });
+        },
+        destroy() {
+            this.removeInterceptor();
         },
     }"
 >
