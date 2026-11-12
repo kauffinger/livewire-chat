@@ -15,6 +15,14 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Livewire\livewire;
 
+beforeEach(function (): void {
+    ob_start(fn (string $output): string => preg_replace('/\{"stream":true.*?"endStream":true\}/', '', $output));
+});
+
+afterEach(function (): void {
+    ob_end_flush();
+});
+
 it('renders the conversation page for its owner', function (): void {
     $user = User::factory()->create();
     $conversation = ConversationFactory::new()
