@@ -61,7 +61,7 @@ class Show extends Component
     }
 
     /**
-     * @return list<array{id: string, role: string, content: string, thinking: string, toolCalls: list<array<string, mixed>>, failed: bool}>
+     * @return list<array{id: string, role: string, content: string, reasoning: string, toolCalls: list<array<string, mixed>>, failed: bool}>
      */
     #[Computed]
     public function messages(): array
@@ -72,7 +72,7 @@ class Show extends Component
                 'id' => $message->id,
                 'role' => $message->role,
                 'content' => $message->content,
-                'thinking' => collect($message->steps)->pluck('reasoning')->filter()->implode("\n\n"),
+                'reasoning' => collect($message->steps)->pluck('reasoning')->filter()->implode("\n\n"),
                 'toolCalls' => $message->toolCalls(),
                 'failed' => $message->status === MessageStatus::Failed,
             ])

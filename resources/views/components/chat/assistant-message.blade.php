@@ -1,5 +1,5 @@
 @props([
-    'message' => ['content' => '', 'thinking' => '', 'toolCalls' => []],
+    'message' => ['content' => '', 'reasoning' => '', 'toolCalls' => []],
     'streaming' => false,
 ])
 
@@ -15,27 +15,27 @@
     x-data="assistantMessage(@js($message), @js(['copy' => __('Copy'), 'copied' => __('Copied'), 'thinking' => __('Thinking…'), 'runningTool' => __('Running :tool…')]), @js($streaming))"
     x-on:click="copyCode($event)"
 >
-    <div x-show="message.thinking.trim() !== ''">
+    <div x-show="message.reasoning.trim() !== ''">
         <button
             type="button"
             class="{{ $disclosureClasses }}"
-            x-on:click="showThinking = ! showThinking"
-            x-bind:aria-expanded="showThinking"
+            x-on:click="showReasoning = ! showReasoning"
+            x-bind:aria-expanded="showReasoning"
         >
             <flux:icon.light-bulb variant="mini" />
             <span>{{ __('Reasoning') }}</span>
             <flux:icon.chevron-right
                 variant="micro"
                 class="transition-transform"
-                x-bind:class="showThinking && 'rotate-90'"
+                x-bind:class="showReasoning && 'rotate-90'"
             />
         </button>
 
-        <div x-show="showThinking" x-collapse>
+        <div x-show="showReasoning" x-collapse>
             <article
                 wire:ignore
                 class="prose prose-sm prose-zinc prose-chat dark:prose-invert max-w-none pt-2 text-zinc-500 dark:text-zinc-400"
-                x-html="thinkingHtml"
+                x-html="reasoningHtml"
             ></article>
         </div>
     </div>

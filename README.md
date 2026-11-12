@@ -318,7 +318,7 @@ receive(event) {
             this.message.content += event.delta;
             break;
         case 'reasoning_delta':
-            this.message.thinking += event.delta;
+            this.message.reasoning += event.delta;
             break;
         case 'tool_call':
             // Adds the tool call to the message.

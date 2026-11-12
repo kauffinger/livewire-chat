@@ -3,25 +3,23 @@ import hljs from 'highlight.js';
 import { Alpine } from '../../../vendor/livewire/livewire/dist/livewire.esm';
 import completeMarkdown from '../completeMarkdown.js';
 
+const markdown = createMarkdown();
+
 // When a turn ends, its stored message replaces the streaming one and picks the reveal up from here.
 let unfinishedReveal = null;
 
 export default function assistantMessage(message, labels, isStreaming = false) {
-    const markdown = createMarkdown(labels.copy);
+    const render = (text) => markdown.render(text, { copyLabel: labels.copy });
 
     return {
         message,
-        lastEventType: null,
-        showThinking: false,
+        activity: null,
+        showReasoning: false,
         copied: false,
         revealedLength: 0,
         isRevealing: false,
 
         init() {
-            loadHighlightTheme(this.$flux.dark);
-
-            this.$watch('$flux.dark', (isDark) => loadHighlightTheme(isDark));
-
             if (isStreaming) {
                 this.stopListening = this.$wire.$interceptMessage(({ onStream }) => {
                     onStream(({ json }) => this.receive(json.content));
@@ -29,7 +27,7 @@ export default function assistantMessage(message, labels, isStreaming = false) {
             } else if (this.continuesUnfinishedReveal()) {
                 this.continueReveal();
             } else {
-                this.paint(markdown.render(this.message.content));
+                this.paint(render(this.message.content));
             }
         },
 
@@ -43,12 +41,12 @@ export default function assistantMessage(message, labels, isStreaming = false) {
                     if (this.message.content.trim() !== '') {
                         this.message.content += '\n\n';
                     }
-                    break;
+                    return;
                 case 'text_delta':
                     this.message.content += event.delta;
                     break;
                 case 'reasoning_delta':
-                    this.message.thinking += event.delta;
+                    this.message.reasoning += event.delta;
                     break;
                 case 'tool_call':
                     this.message.toolCalls.push({
@@ -64,9 +62,11 @@ export default function assistantMessage(message, labels, isStreaming = false) {
                             : toolCall,
                     );
                     break;
+                default:
+                    return;
             }
 
-            this.lastEventType = event.type;
+            this.activity = event.type;
 
             this.reveal();
         },
@@ -81,7 +81,7 @@ export default function assistantMessage(message, labels, isStreaming = false) {
         },
 
         continueReveal() {
-            this.paint(wrapWords(markdown.render(completeMarkdown(unfinishedReveal.text))));
+            this.paint(wrapWords(render(completeMarkdown(unfinishedReveal.text))));
             this.revealedLength = unfinishedReveal.text.length;
 
             requestAnimationFrame(() => {
@@ -124,7 +124,7 @@ export default function assistantMessage(message, labels, isStreaming = false) {
                 const revealed = text.slice(0, this.revealedLength);
                 const isFinished = !isStreaming && revealed.length === text.length;
 
-                this.paint(wrapWords(markdown.render(isFinished ? revealed : completeMarkdown(revealed))));
+                this.paint(wrapWords(render(isFinished ? revealed : completeMarkdown(revealed))));
 
                 unfinishedReveal = { text: revealed, at: performance.now() };
 
@@ -164,8 +164,8 @@ export default function assistantMessage(message, labels, isStreaming = false) {
             setTimeout(() => (button.textContent = labels.copy), 2000);
         },
 
-        get thinkingHtml() {
-            return markdown.render(this.message.thinking);
+        get reasoningHtml() {
+            return render(this.message.reasoning);
         },
 
         formatToolResult(result) {
@@ -173,7 +173,7 @@ export default function assistantMessage(message, labels, isStreaming = false) {
         },
 
         isWriting() {
-            return ['text_delta', 'text_end', 'stream_end'].includes(this.lastEventType);
+            return this.activity === 'text_delta';
         },
 
         status() {
@@ -183,11 +183,11 @@ export default function assistantMessage(message, labels, isStreaming = false) {
         },
 
         latestThought() {
-            if (!['reasoning_start', 'reasoning_delta'].includes(this.lastEventType)) {
+            if (this.activity !== 'reasoning_delta') {
                 return '';
             }
 
-            return this.message.thinking
+            return this.message.reasoning
                 .trim()
                 .split('\n')
                 .at(-1)
@@ -197,7 +197,7 @@ export default function assistantMessage(message, labels, isStreaming = false) {
     };
 }
 
-function createMarkdown(copyLabel) {
+function createMarkdown() {
     const markdown = markdownit({
         html: false,
         breaks: true,
@@ -223,27 +223,10 @@ function createMarkdown(copyLabel) {
     markdown.renderer.rules.fence = (tokens, index, options, env, self) => {
         const language = markdown.utils.escapeHtml(tokens[index].info.trim().split(/\s+/)[0] || 'text');
 
-        return `<div class="code-block"><div class="code-block-header"><span>${language}</span><button type="button" data-copy-code>${markdown.utils.escapeHtml(copyLabel)}</button></div>${renderFence(tokens, index, options, env, self)}</div>`;
+        return `<div class="code-block"><div class="code-block-header"><span>${language}</span><button type="button" data-copy-code>${markdown.utils.escapeHtml(env.copyLabel)}</button></div>${renderFence(tokens, index, options, env, self)}</div>`;
     };
 
     return markdown;
-}
-
-function loadHighlightTheme(isDark) {
-    let link = document.head.querySelector('link[data-highlight-theme]');
-
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.setAttribute('data-highlight-theme', 'dynamic');
-        document.head.appendChild(link);
-    }
-
-    const themeUrl = isDark ? '/css/highlight/github-dark.css' : '/css/highlight/github-light.css';
-
-    if (link.getAttribute('href') !== themeUrl) {
-        link.href = themeUrl;
-    }
 }
 
 function isFirstHalfOfSurrogatePair(charCode) {
