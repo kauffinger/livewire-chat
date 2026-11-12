@@ -7,6 +7,150 @@
     ],
     "_version": 2,
     "packages": {
+        "amphp/amp": {
+            "v3.1.3": {
+                "sha256": "6b9051b59037d5a763a43bed0c44571671ce8dc8d45be4cd256c9afa1fe3cd51",
+                "sourceReference": "73c38b323ff8d790abf0f76c56fcc892bda4111a",
+                "sourceUrl": "https://github.com/amphp/amp.git",
+                "distUrl": "https://api.github.com/repos/amphp/amp/zipball/73c38b323ff8d790abf0f76c56fcc892bda4111a",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/byte-stream": {
+            "v2.1.3": {
+                "sha256": "4049249991568f98d86d4a7dcd942cf82ee372c71ab65c292608b0899da114b0",
+                "sourceReference": "1511cdfdf868a706307358bd48f155c3df2c490f",
+                "sourceUrl": "https://github.com/amphp/byte-stream.git",
+                "distUrl": "https://api.github.com/repos/amphp/byte-stream/zipball/1511cdfdf868a706307358bd48f155c3df2c490f",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/cache": {
+            "v2.0.1": {
+                "sha256": "5e3a34ed7536737e1418b87a0d148bd3dfc389008f9f1c5cd1b2c5fa4b406a70",
+                "sourceReference": "46912e387e6aa94933b61ea1ead9cf7540b7797c",
+                "sourceUrl": "https://github.com/amphp/cache.git",
+                "distUrl": "https://api.github.com/repos/amphp/cache/zipball/46912e387e6aa94933b61ea1ead9cf7540b7797c",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/dns": {
+            "v2.4.2": {
+                "sha256": "2e552d00e49be881cb603e8d6df4c11b37d080eb2c39e56f1ebb50a2212d7782",
+                "sourceReference": "2e2b4daa214a18b1528919d6781988ea65a9a47d",
+                "sourceUrl": "https://github.com/amphp/dns.git",
+                "distUrl": "https://api.github.com/repos/amphp/dns/zipball/2e2b4daa214a18b1528919d6781988ea65a9a47d",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/hpack": {
+            "v3.2.2": {
+                "sha256": "6bcd7bd3d6c82771c3f7967f08fd0745c8c16e47b05f801b19a180bb66800348",
+                "sourceReference": "291da27078e7e149a9bad4d08ff05bf7d81c89f4",
+                "sourceUrl": "https://github.com/amphp/hpack.git",
+                "distUrl": "https://api.github.com/repos/amphp/hpack/zipball/291da27078e7e149a9bad4d08ff05bf7d81c89f4",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/http": {
+            "v2.1.2": {
+                "sha256": "cac08311d6064b126777c325f5ce2f2c01a6e22db5de4609a31256b6931efbdc",
+                "sourceReference": "3680d80bd38b5d6f3c2cef2214ca6dd6cef26588",
+                "sourceUrl": "https://github.com/amphp/http.git",
+                "distUrl": "https://api.github.com/repos/amphp/http/zipball/3680d80bd38b5d6f3c2cef2214ca6dd6cef26588",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/http-client": {
+            "v5.3.7": {
+                "sha256": "f1136282155b1a5e12f10a6a931d5d543fc400d8216786a7be4aa45598c687b8",
+                "sourceReference": "fd6be2212d34b81289521ecd1a5a88c4f7600040",
+                "sourceUrl": "https://github.com/amphp/http-client.git",
+                "distUrl": "https://api.github.com/repos/amphp/http-client/zipball/fd6be2212d34b81289521ecd1a5a88c4f7600040",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/http-server": {
+            "v3.4.8": {
+                "sha256": "45f1343ef98140ab02a00f2a32d69f07f82f8162397220a88afef2a338421267",
+                "sourceReference": "31b004bf1cfd3feed3f0bdf20ddb9bfef935efb8",
+                "sourceUrl": "https://github.com/amphp/http-server.git",
+                "distUrl": "https://api.github.com/repos/amphp/http-server/zipball/31b004bf1cfd3feed3f0bdf20ddb9bfef935efb8",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/parser": {
+            "v1.1.1": {
+                "sha256": "5957e324fdd005a669d926b50710e564ca664113392076c266c7acf17ea64714",
+                "sourceReference": "3cf1f8b32a0171d4b1bed93d25617637a77cded7",
+                "sourceUrl": "https://github.com/amphp/parser.git",
+                "distUrl": "https://api.github.com/repos/amphp/parser/zipball/3cf1f8b32a0171d4b1bed93d25617637a77cded7",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/pipeline": {
+            "v1.2.7": {
+                "sha256": "89b8212a965c8e6a45c1f410120d44c6a105cbef22c6ab2d285f7e228f662027",
+                "sourceReference": "cf2d67696c2015ea7c7fd8f6ec5f8ed7c2d17c17",
+                "sourceUrl": "https://github.com/amphp/pipeline.git",
+                "distUrl": "https://api.github.com/repos/amphp/pipeline/zipball/cf2d67696c2015ea7c7fd8f6ec5f8ed7c2d17c17",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/process": {
+            "v2.1.1": {
+                "sha256": "b079c16056f44e74df409b8a5358724331e67b442c6469b94210fe6b29e434fa",
+                "sourceReference": "6ee0d11112a9b1338b7dc270d51f254e872c90b5",
+                "sourceUrl": "https://github.com/amphp/process.git",
+                "distUrl": "https://api.github.com/repos/amphp/process/zipball/6ee0d11112a9b1338b7dc270d51f254e872c90b5",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/serialization": {
+            "v1.1.0": {
+                "sha256": "dd9e5de118346deed3af0d18203b22b7713da400ee86bdf820ceb75129eb0960",
+                "sourceReference": "fdf2834d78cebb0205fb2672676c1b1eb84371f0",
+                "sourceUrl": "https://github.com/amphp/serialization.git",
+                "distUrl": "https://api.github.com/repos/amphp/serialization/zipball/fdf2834d78cebb0205fb2672676c1b1eb84371f0",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
+        "amphp/socket": {
+            "v2.4.1": {
+                "sha256": "2779c2c159a8ab261b638cad6d649f5ab943ac66c1b5975a72856bf48c61abd8",
+                "sourceReference": "b347be5aff6b2cc025208bb4d896607eb470c018",
+                "sourceUrl": "https://github.com/amphp/socket.git",
+                "distUrl": "https://api.github.com/repos/amphp/socket/zipball/b347be5aff6b2cc025208bb4d896607eb470c018",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/sync": {
+            "v2.3.1": {
+                "sha256": "b47290b2afbcb93a2152e493d3919496a069a819fd16f5672eb9ba85643199d7",
+                "sourceReference": "2f711b6651270449d59c770ffb518698655022f7",
+                "sourceUrl": "https://github.com/amphp/sync.git",
+                "distUrl": "https://api.github.com/repos/amphp/sync/zipball/2f711b6651270449d59c770ffb518698655022f7",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/websocket": {
+            "v2.0.5": {
+                "sha256": "940c856b0f829ad35516110c6ec8e2092c205e2a11a7c49808d65db0bbbf7f99",
+                "sourceReference": "578856dbfe15802d084f21ff157a347270e4d8ca",
+                "sourceUrl": "https://github.com/amphp/websocket.git",
+                "distUrl": "https://api.github.com/repos/amphp/websocket/zipball/578856dbfe15802d084f21ff157a347270e4d8ca",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
+        "amphp/websocket-client": {
+            "v2.0.2": {
+                "sha256": "76cbce380c0049612be910fcc30c8e6d523c42dbb7589dc681935c0ce2a73665",
+                "sourceReference": "dc033fdce0af56295a23f63ac4f579b34d470d6c",
+                "sourceUrl": "https://github.com/amphp/websocket-client.git",
+                "distUrl": "https://api.github.com/repos/amphp/websocket-client/zipball/dc033fdce0af56295a23f63ac4f579b34d470d6c",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
+            }
+        },
         "brianium/paratest": {
             "v7.27.5": {
                 "sha256": "b8377807918e0617e03d4190c293d8f730fdcdb1c1d29ae41c241a38c3160003",
@@ -50,6 +194,15 @@
                 "sourceUrl": "https://github.com/composer/semver.git",
                 "distUrl": "https://api.github.com/repos/composer/semver/zipball/d92543b7ede9c4ec6b59853cefb061e39866d2cf",
                 "firstSeenAt": "2026-11-11T15:44:28+00:00"
+            }
+        },
+        "daverandom/libdns": {
+            "v2.1.0": {
+                "sha256": "224409d0d4bd301ab8c1c31093094f0abbfb8c12b058d2975dee382a4cdc2ea6",
+                "sourceReference": "b84c94e8fe6b7ee4aecfe121bfe3b6177d303c8a",
+                "sourceUrl": "https://github.com/DaveRandom/LibDNS.git",
+                "distUrl": "https://api.github.com/repos/DaveRandom/LibDNS/zipball/b84c94e8fe6b7ee4aecfe121bfe3b6177d303c8a",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
             }
         },
         "doctrine/deprecations": {
@@ -167,6 +320,15 @@
                 "sourceUrl": "https://github.com/hamcrest/hamcrest-php.git",
                 "distUrl": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/b61cd040da1a4925bc90a51c074f5297e7c0fa52",
                 "firstSeenAt": "2026-11-11T15:44:28+00:00"
+            }
+        },
+        "kelunik/certificate": {
+            "v1.1.3": {
+                "sha256": "12ea71ed74a973c05a9040ea83bdd8c59e8820fe6d7646140e3f61dfd1fd8db0",
+                "sourceReference": "7e00d498c264d5eb4f78c69f41c8bd6719c0199e",
+                "sourceUrl": "https://github.com/kelunik/certificate.git",
+                "distUrl": "https://api.github.com/repos/kelunik/certificate/zipball/7e00d498c264d5eb4f78c69f41c8bd6719c0199e",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
             }
         },
         "larastan/larastan": {
@@ -322,6 +484,15 @@
                 "firstSeenAt": "2026-11-11T15:44:29+00:00"
             }
         },
+        "league/uri-components": {
+            "7.10.0": {
+                "sha256": "331644d966219245b432b1de97d9b8d8bb447056a9a9b27a669b5d8f522a38a5",
+                "sourceReference": "2a790e66948d3504a2f2cd42b80d4b8874601540",
+                "sourceUrl": "https://github.com/thephpleague/uri-components.git",
+                "distUrl": "https://api.github.com/repos/thephpleague/uri-components/zipball/2a790e66948d3504a2f2cd42b80d4b8874601540",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
+            }
+        },
         "league/uri-interfaces": {
             "7.10.0": {
                 "sha256": "850f1ee484c3bc032f67a4546a0f66cd149eacfe3abcc70280de813389550c35",
@@ -455,6 +626,15 @@
                 "sourceUrl": "https://github.com/pestphp/pest-plugin-arch.git",
                 "distUrl": "https://api.github.com/repos/pestphp/pest-plugin-arch/zipball/244465d5dc9ea9fb5ac5c9badb7eb47d1594e4c1",
                 "firstSeenAt": "2026-11-11T15:44:28+00:00"
+            }
+        },
+        "pestphp/pest-plugin-browser": {
+            "v5.2.0": {
+                "sha256": "69a90b598a1f1f4ffef522771264bb8570d6645c567e5a80304bfd5fb4c1321c",
+                "sourceReference": "2b5c7b51bceba3a04a5ca1c5e3f0bb236f544357",
+                "sourceUrl": "https://github.com/pestphp/pest-plugin-browser.git",
+                "distUrl": "https://api.github.com/repos/pestphp/pest-plugin-browser/zipball/2b5c7b51bceba3a04a5ca1c5e3f0bb236f544357",
+                "firstSeenAt": "2026-11-12T17:07:40+00:00"
             }
         },
         "pestphp/pest-plugin-laravel": {
@@ -626,6 +806,15 @@
                 "sourceUrl": "https://github.com/rectorphp/rector.git",
                 "distUrl": "https://api.github.com/repos/rectorphp/rector/zipball/55acbd956d7e3907f7d21aab54edd68a310609e6",
                 "firstSeenAt": "2026-11-11T15:44:33+00:00"
+            }
+        },
+        "revolt/event-loop": {
+            "v1.0.9": {
+                "sha256": "8b80136b01aee8ee3d5fe28e7de96bda9f70b6c3bd11d6bd08dec3bd5c112816",
+                "sourceReference": "44061cf513e53c6200372fc935ac42271566295d",
+                "sourceUrl": "https://github.com/revoltphp/event-loop.git",
+                "distUrl": "https://api.github.com/repos/revoltphp/event-loop/zipball/44061cf513e53c6200372fc935ac42271566295d",
+                "firstSeenAt": "2026-11-12T17:07:39+00:00"
             }
         },
         "sebastian/cli-parser": {

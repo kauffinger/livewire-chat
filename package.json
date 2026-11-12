@@ -26,6 +26,7 @@
         "lightningcss-linux-x64-gnu": "^1.33.0"
     },
     "devDependencies": {
-        "@tailwindcss/typography": "^0.5.20"
+        "@tailwindcss/typography": "^0.5.20",
+        "playwright": "^1.64.1"
     }
 }

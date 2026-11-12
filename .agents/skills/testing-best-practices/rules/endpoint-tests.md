@@ -31,6 +31,32 @@ An HTTP test shows that the endpoint performs authorization. It cannot identify 
 - Write one HTTP test for one refused role, which shows that the endpoint calls the authorization.
 - If the project has a helper that asserts the ability and the arguments of the gate, use that helper.
 
+## Browser tests
+
+Write a browser test only for JavaScript behavior that an HTTP test cannot reach, such as modal interaction, drag-and-drop, live search, or client-side validation. Browser tests are slower than HTTP tests and can fail for reasons unrelated to the code under test.
+
+- Assert the state that the user can see, and assert the state in the database that the interaction saves.
+- Wait until the test reaches the required state. Do not wait for a fixed number of seconds. A fixed wait can fail on a slower machine.
+- Call `assertNoJavaScriptErrors()` in each browser test. An error in the console is a defect.
+
+### Where a browser test lives and how to run it
+
+The plugin runs browser tests as normal Pest tests, so they need no separate suite. Put them in `tests/Browser` to separate them from faster tests and run the directory with one command.
+
+- Run a browser test with `vendor/bin/pest tests/Browser`, and add `--parallel` for the complete suite.
+- Run `vendor/bin/pest --debug` to open the window of the browser and to pause at a failure. Use `--headed` to watch a run that passes.
+- Add `--browser firefox` or `--browser safari` to run the test in a different browser. The default browser is Chrome.
+- The run needs Playwright and a browser on the machine. Follow the plugin documentation for local and CI installation commands.
+- Fetch `https://pestphp.com/docs/browser-testing` for the interactions, the assertions, and the devices that the plugin gives.
+
+### Browser test pitfalls
+
+- The plugin waits five seconds for an element. For a slower page, raise the value with `pest()->browser()->timeout(10000)` in `Pest.php`. Do not add a wait for a number of seconds to the test.
+- Apply `RefreshDatabase` to the browser tests in `Pest.php`. A browser test hits the application through a real request, and the records that it leaves break the next test.
+- Add `tests/Browser/Screenshots` to `.gitignore`. A failure writes a screenshot, and the file is not part of the repository.
+- Give `withKeyDown()` a key code, such as `KeyA`. A letter such as `'a'` gives the lowercase character, whatever modifier the test holds.
+- Interact inside the callback of `withinFrame()`. An interaction outside the callback does not reach the frame.
+
 ## Testing validation
 
 - Write one test for each validation rule when each failure represents a separate contract.
